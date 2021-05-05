@@ -1,0 +1,17 @@
+# 3DS Build extension files & folders
+*.3dsx
+*.elf
+*.smdh
+*.o
+*.lst
+*.map
+build/
+*.t3x
+*.bcfnt
+*.a
+
+# NDS Build extension files & folders
+*.nds
+*.pnproj
+*.prj
+*.dldi
