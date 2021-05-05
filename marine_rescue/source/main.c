@@ -6,11 +6,13 @@
 static Castaway castaways[MAX_CASTAWAY];
 static Shark sharks[MAX_SHARKS];
 static Lifeboat lifeboat;
+static Sea sea;
 
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
 static C2D_SpriteSheet sharks_spriteSheet;
 static C2D_SpriteSheet lifeboat_spriteSheet;
+static C2D_SpriteSheet sea_spriteSheet;
 
 /* Initializer Functions */
 static void init_sprites()
@@ -24,6 +26,18 @@ static void init_sprites()
 	lifeboat_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/lifeboat.t3x");
 	if (!lifeboat_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
+	sea_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sea.t3x");
+	if (!sea_spriteSheet)
+		svcBreak(USERBREAK_PANIC);
+}
+static void init_sea()
+{
+	Sea *sprite = &sea;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, sea_spriteSheet, 0);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
 }
 
 static void init_castaways()
@@ -168,6 +182,11 @@ static void moveLifeboatController(u32 kHeld)
 }
 
 /* Drawers Functions */
+static void drawer_sea()
+{
+	C2D_DrawSprite(&sea.spr);
+}
+
 static void drawer_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
@@ -204,6 +223,7 @@ int main(int argc, char *argv[])
 	init_sprites();
 
 	// Initialize sprites for Structures
+	init_sea();
 	init_castaways();
 	init_sharks();
 	init_lifeboat();
@@ -239,6 +259,7 @@ int main(int argc, char *argv[])
 		C2D_SceneBegin(top);
 
 		//Drawer Sprites
+		drawer_sea();
 		drawer_castaways();
 		drawer_sharks();
 		drawer_lifeboat();
@@ -250,6 +271,7 @@ int main(int argc, char *argv[])
 	C2D_SpriteSheetFree(castaways_spriteSheet);
 	C2D_SpriteSheetFree(sharks_spriteSheet);
 	C2D_SpriteSheetFree(lifeboat_spriteSheet);
+	C2D_SpriteSheetFree(sea_spriteSheet);
 
 	// Deinit libs
 	C2D_Fini();
