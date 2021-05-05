@@ -1,9 +1,4 @@
 --atlas -f rgba8888 -z auto
-Sharpedo.png
-Mega_Sharpedo.png
-Castaway_M.png
-Castaway_F.png
-CoastGuard_Ship.png
 north_lifeboat1.png
 northeast_lifeboat2.png
 east_lifeboat3.png
