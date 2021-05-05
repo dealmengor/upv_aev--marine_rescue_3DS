@@ -10,7 +10,7 @@
 #include <3ds.h>
 
 #define MAX_SPRITES 3
-#define SCREEN_WIDTH 320
+#define SCREEN_WIDTH 400
 #define SCREEN_HEIGHT 240
 #define SPEED 1
 
@@ -260,19 +260,20 @@ int main(int argc, char *argv[])
 		moveSprites();
 		movePlayerSprite();
 
-		// Render the scene
+		// Start render the scene
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 
-		C2D_TargetClear(top, C2D_Color32(0x68, 0xB0, 0xD8, 0xFF));
+		//TOP Screen
+		C2D_TargetClear(top, C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f));
 		C2D_SceneBegin(top);
-		sceneRender(size);
-
-		C2D_TargetClear(bottom, C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f));
-		C2D_SceneBegin(bottom);
-
 		for (size_t i = 0; i < numSprites; i++)
 			C2D_DrawSprite(&sprites[i].spr);
-		C3D_FrameEnd(0);
+
+		//Bottom Screen
+		C2D_TargetClear(bottom, C2D_Color32(0x68, 0xB0, 0xD8, 0xFF));
+		C2D_SceneBegin(bottom);
+		sceneRender(size);
+		C3D_FrameEnd(0); // Finish render the scene
 	}
 
 	// Deinitialize the scene
