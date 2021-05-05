@@ -28,9 +28,6 @@ static void init_sprites()
 
 static void init_castaways()
 {
-
-	srand(time(NULL)); // Sets a seed for random numbers
-
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
 		Castaway *sprite = &castaways[i];
@@ -46,9 +43,6 @@ static void init_castaways()
 
 static void init_sharks()
 {
-
-	srand(time(NULL)); // Sets a seed for random numbers
-
 	for (size_t i = 0; i < MAX_SHARKS; i++)
 	{
 		Shark *sprite = &sharks[i];
@@ -64,9 +58,6 @@ static void init_sharks()
 
 static void init_lifeboat()
 {
-
-	srand(time(NULL)); // Sets a seed for random numbers
-
 	Lifeboat *sprite = &lifeboat;
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, lifeboat_spriteSheet, 0);
@@ -182,11 +173,13 @@ static void drawer_castaways()
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 		C2D_DrawSprite(&castaways[i].spr);
 }
+
 static void drawer_sharks()
 {
 	for (size_t i = 0; i < MAX_SHARKS; i++)
-		C2D_DrawSprite(&castaways[i].spr);
+		C2D_DrawSprite(&sharks[i].spr);
 }
+
 static void drawer_lifeboat()
 {
 	C2D_DrawSprite(&lifeboat.spr);
@@ -201,6 +194,7 @@ int main(int argc, char *argv[])
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 	C2D_Prepare();
+	srand(time(NULL)); // Sets a seed for random numbers
 
 	// Create screens
 	C3D_RenderTarget *top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
