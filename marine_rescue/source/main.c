@@ -99,11 +99,12 @@ static void init_lifeboat()
 	C2D_SpriteSetCenter(&lboat->spr, 0.5f, 0.5f);
 	C2D_SpriteSetPos(&lboat->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
 	C2D_SpriteSetRotationDegrees(&lboat->spr, 0);
-	lboat->dx = rand() * 4.0f / RAND_MAX - 2.0f;
-	lboat->dy = rand() * 4.0f / RAND_MAX - 2.0f;
+	lboat->dx = 0;
+	lboat->dy = 0;
 	lboat->speed = BOAT_SPEED;
 	lboat->alive = true;
 	lboat->seatcount = BOAT_SEAT_COUNT;
+	lboat->fuel = 0;
 
 	if ((GAME_START == false))
 	{
@@ -319,6 +320,15 @@ static void collisionCastaway_Lifeboat()
 	}
 }
 
+static void collisionCoastGuardShip_Lifeboat()
+{
+	if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
+		abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
+	{
+		lboat->fuel = FUEL_RECHARGE;
+	}
+}
+
 /* Drawer Functions */
 static void drawer_sea()
 {
@@ -404,10 +414,10 @@ static void drawer_scoreboard(float size)
 	//TESTING
 	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE], testbuf4[BUFFER_SIZE];
 	C2D_Text posx, posy, dx, dy;
-	snprintf(testbuf, sizeof(testbuf), "cgship.X: %f ", cgship->spr.params.pos.x);
-	snprintf(testbuf2, sizeof(testbuf2), "cgship.Y %f ", cgship->spr.params.pos.y);
-	snprintf(testbuf3, sizeof(testbuf3), "cgship.DX %f ", cgship->dx);
-	snprintf(testbuf4, sizeof(testbuf4), "cgship.DY %f ", cgship->dy);
+	snprintf(testbuf, sizeof(testbuf), "cgship.X: %f ", lboat->spr.params.pos.x);
+	snprintf(testbuf2, sizeof(testbuf2), "cgship.Y: %f ", lboat->spr.params.pos.y);
+	snprintf(testbuf3, sizeof(testbuf3), "cgship.DX: %f ", lboat->dx);
+	snprintf(testbuf4, sizeof(testbuf4), "cgship.FUEL: %d ", lboat->fuel);
 	C2D_TextParse(&posx, g_dynamicBuf, testbuf);
 	C2D_TextParse(&posy, g_dynamicBuf, testbuf2);
 	C2D_TextParse(&dx, g_dynamicBuf, testbuf3);
@@ -416,10 +426,10 @@ static void drawer_scoreboard(float size)
 	C2D_TextOptimize(&posy);
 	C2D_TextOptimize(&dx);
 	C2D_TextOptimize(&dy);
-	C2D_DrawText(&posx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&posy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 190.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 210.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&posx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&posy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
 static void scenesExit(void)
@@ -490,6 +500,7 @@ int main(int argc, char *argv[])
 		collisionShark_Castaway();
 		collisionShark_Lifeboat();
 		collisionCastaway_Lifeboat();
+		collisionCoastGuardShip_Lifeboat();
 
 		/* Start Render the scene */
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);

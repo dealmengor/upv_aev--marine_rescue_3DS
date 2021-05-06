@@ -24,8 +24,9 @@
 
 // Boat Variables
 #define BOAT_LIFES 3
-#define BOAT_SPEED 3
+#define BOAT_SPEED 2
 #define BOAT_SEAT_COUNT 0
+#define FUEL_RECHARGE 60
 
 //Dynamic Text
 #define BUFFER_SIZE 160
