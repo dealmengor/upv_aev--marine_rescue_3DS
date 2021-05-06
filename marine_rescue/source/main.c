@@ -1,6 +1,19 @@
 #include "marine_rescue.h"
 
-/* Globals */
+/* Global */
+/* Socoreboard Variables */
+int points;
+int level;
+int lifes;
+int seatcount;
+int fuel;
+int lb_speedometer;
+int game_time;
+
+/* Element Counters */
+int castawaycount;
+int sharkcount;
+int castawaysaved;
 
 /*Structures & Data Structures Declaratation*/
 static Castaway castaways[MAX_CASTAWAY];
@@ -13,6 +26,10 @@ static C2D_SpriteSheet castaways_spriteSheet;
 static C2D_SpriteSheet sharks_spriteSheet;
 static C2D_SpriteSheet lifeboat_spriteSheet;
 static C2D_SpriteSheet sea_spriteSheet;
+
+/* C2D_Text Declaration Variables */
+C2D_TextBuf g_staticBuf, g_dynamicBuf;	  // Buffers Declaratation
+C2D_Text g_staticText[STATIC_TEXT_COUNT]; // Array for Static Text
 
 /* Initializer Functions */
 static void init_sprites()
@@ -232,6 +249,50 @@ static void drawer_lifeboat()
 	C2D_DrawSprite(&lifeboat.spr);
 }
 
+static void sceneInit_bottom(void)
+{
+	// Create two text buffers: one for static text, and another one for
+	// dynamic text - the latter will be cleared at each frame.
+	g_staticBuf = C2D_TextBufNew(4096); // support up to 4096 glyphs in the buffer
+	g_dynamicBuf = C2D_TextBufNew(4096);
+
+	// Parse the static text strings
+	C2D_TextParse(&g_staticText[0], g_staticBuf, "Lifeboats!");
+
+	// Optimize the static text strings
+	C2D_TextOptimize(&g_staticText[0]);
+}
+
+static void drawer_scoreboard(float size)
+{
+	// Clear the dynamic text buffer
+	C2D_TextBufClear(g_dynamicBuf);
+
+	// Draw static text strings
+	C2D_DrawText(&g_staticText[0], C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 150.0f, 25.0f, 0.5f, size, size, WHITE);
+
+	// Generate and draw dynamic text
+	char buf[BUFFER_SIZE];
+	C2D_Text dynText;
+	snprintf(buf, sizeof(buf), "Current text size: %f (Use  to change)", size);
+	C2D_TextParse(&dynText, g_dynamicBuf, buf);
+	C2D_TextOptimize(&dynText);
+	C2D_DrawText(&dynText, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
+}
+
+static void scenesExit(void)
+{
+	// Delete the text buffers
+	C2D_TextBufDelete(g_dynamicBuf);
+	C2D_TextBufDelete(g_staticBuf);
+
+	// Delete graphics
+	C2D_SpriteSheetFree(castaways_spriteSheet);
+	C2D_SpriteSheetFree(sharks_spriteSheet);
+	C2D_SpriteSheetFree(lifeboat_spriteSheet);
+	C2D_SpriteSheetFree(sea_spriteSheet);
+}
+
 int main(int argc, char *argv[])
 {
 	// Init libs
@@ -244,7 +305,7 @@ int main(int argc, char *argv[])
 
 	// Create screens
 	C3D_RenderTarget *top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
-	//C3D_RenderTarget *bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
+	C3D_RenderTarget *bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
 	// Load graphics Spritesheets
 	init_sprites();
@@ -255,6 +316,9 @@ int main(int argc, char *argv[])
 	init_sharks();
 	init_lifeboat();
 
+	// Initialize the scene for Scoreboard
+	sceneInit_bottom();
+
 	// Main loop
 	while (aptMainLoop())
 	{
@@ -264,7 +328,7 @@ int main(int argc, char *argv[])
 		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysHeld();
 
-		// Interface Control Logic
+		/* Interface Control Logic */
 		// break in order to return to hbmenu
 		if (kDown & KEY_START)
 			break;
@@ -281,11 +345,11 @@ int main(int argc, char *argv[])
 		// Collision Detectors
 		collisionShark_Castaway();
 
-		// Start render the scene
+		/* Start Render the scene */
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 
-		//TOP Screen
-		C2D_TargetClear(top, C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f));
+		/* TOP Screen */
+		C2D_TargetClear(top, BLACK);
 		C2D_SceneBegin(top);
 
 		//Drawer Sprites
@@ -294,16 +358,20 @@ int main(int argc, char *argv[])
 		drawer_sharks();
 		drawer_lifeboat();
 
+		C2D_Flush(); // Ensures all 2D objects so far have been drawn.
+
+		/* Bottom Screen */
+		C2D_TargetClear(bottom, BLACK);
+		C2D_SceneBegin(bottom);
+		drawer_scoreboard(FONT_SIZE);
+
 		C3D_FrameEnd(0); // Finish render the scene
 	}
 
-	// Delete graphics
-	C2D_SpriteSheetFree(castaways_spriteSheet);
-	C2D_SpriteSheetFree(sharks_spriteSheet);
-	C2D_SpriteSheetFree(lifeboat_spriteSheet);
-	C2D_SpriteSheetFree(sea_spriteSheet);
+	// Deinitialize the scene
+	scenesExit();
 
-	// Deinit libs
+	// Deinitialize libs
 	C2D_Fini();
 	C3D_Fini();
 	gfxExit();
