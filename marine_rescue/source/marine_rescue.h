@@ -19,7 +19,7 @@
 
 // Game Configuratation Variables
 #define MAX_SHARKS 1
-#define MAX_CASTAWAY 2
+#define MAX_CASTAWAY 10
 #define NEXT_LEVEL 100
 
 // Boat Variables
@@ -80,6 +80,7 @@ typedef struct
 // Shark sprite struct
 typedef struct
 {
+    int id;
     C2D_Sprite spr;
     float dx, dy; // velocity
 } Shark;
