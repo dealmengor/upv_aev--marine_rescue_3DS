@@ -1,13 +1,13 @@
 #include "marine_rescue.h"
 
 /* Globals */
-bool GAME_START = false;
 
 /* Socoreboard Variables */
+bool GAME_START = false;
 int points;
 int level;
 int lb_speedometer;
-int game_time;
+double diff_t = 0;
 
 /* Element Counters */
 int castawaycount;
@@ -64,16 +64,16 @@ static void init_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
-		Castaway *sprite = &castaways[i];
+		Castaway *castaway = &castaways[i];
 		// Random image, position, rotation and SPEED
-		C2D_SpriteFromSheet(&sprite->spr, castaways_spriteSheet, rand() % 1);
-		C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
-		C2D_SpriteSetPos(&sprite->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
-		C2D_SpriteSetRotation(&sprite->spr, C3D_Angle(rand() / (float)RAND_MAX));
-		sprite->dx = rand() * 4.0f / RAND_MAX - 2.0f;
-		sprite->dy = rand() * 4.0f / RAND_MAX - 2.0f;
-		sprite->alive = true;
-		sprite->picked_up = false;
+		C2D_SpriteFromSheet(&castaway->spr, castaways_spriteSheet, rand() % 1);
+		C2D_SpriteSetCenter(&castaway->spr, 0.5f, 0.5f);
+		C2D_SpriteSetPos(&castaway->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
+		C2D_SpriteSetRotation(&castaway->spr, C3D_Angle(rand() / (float)RAND_MAX));
+		castaway->dx = rand() * 4.0f / RAND_MAX - 2.0f;
+		castaway->dy = rand() * 4.0f / RAND_MAX - 2.0f;
+		castaway->alive = true;
+		castaway->picked_up = false;
 	}
 }
 
@@ -129,21 +129,21 @@ static void moveSprites_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
-		Castaway *sprite = &castaways[i];
-		if ((sprite->alive == true))
+		Castaway *castaway = &castaways[i];
+		if ((castaway->alive == true))
 		{
-			C2D_SpriteMove(&sprite->spr, sprite->dx, sprite->dy);
-			C2D_SpriteRotateDegrees(&sprite->spr, 1.0f);
+			C2D_SpriteMove(&castaway->spr, castaway->dx, castaway->dy);
+			C2D_SpriteRotateDegrees(&castaway->spr, 1.0f);
 		}
 
 		// Check for collision with the screen boundaries
-		if ((sprite->spr.params.pos.x < sprite->spr.params.pos.w / 2.0f && sprite->dx < 0.0f) ||
-			(sprite->spr.params.pos.x > (TOP_SCREEN_WIDTH - (sprite->spr.params.pos.w / 2.0f)) && sprite->dx > 0.0f))
-			sprite->dx = -sprite->dx;
+		if ((castaway->spr.params.pos.x < castaway->spr.params.pos.w / 2.0f && castaway->dx < 0.0f) ||
+			(castaway->spr.params.pos.x > (TOP_SCREEN_WIDTH - (castaway->spr.params.pos.w / 2.0f)) && castaway->dx > 0.0f))
+			castaway->dx = -castaway->dx;
 
-		if ((sprite->spr.params.pos.y < sprite->spr.params.pos.h / 2.0f && sprite->dy < 0.0f) ||
-			(sprite->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (sprite->spr.params.pos.h / 2.0f)) && sprite->dy > 0.0f))
-			sprite->dy = -sprite->dy;
+		if ((castaway->spr.params.pos.y < castaway->spr.params.pos.h / 2.0f && castaway->dy < 0.0f) ||
+			(castaway->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (castaway->spr.params.pos.h / 2.0f)) && castaway->dy > 0.0f))
+			castaway->dy = -castaway->dy;
 	}
 }
 
@@ -275,6 +275,21 @@ static void lifeboatDeath(Lifeboat *lboat)
 	}
 }
 
+/* Spawn Controllers */
+static void spawnNewCastaway()
+{
+	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	{
+		Castaway *castaway = &castaways[i];
+		if ((castaway->alive == false) || (castaway->picked_up == true))
+		{
+			castaway->alive = true;
+			castaway->picked_up = false;
+			break;
+		}
+	}
+}
+
 /* Collision Functions */
 static void collisionShark_Castaway()
 {
@@ -287,7 +302,6 @@ static void collisionShark_Castaway()
 			abs(shark->spr.params.pos.y - castaways[i].spr.params.pos.y) < 20.0f)
 		{
 			castaway->alive = false;
-			// C2D_SpriteSetPos(&castaway->spr, TOP_SCREEN_WIDTH / 2, -500.0f);
 		}
 	}
 }
@@ -329,8 +343,8 @@ static void drawer_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
-		Castaway *sprite = &castaways[i];
-		if ((sprite->alive == true && sprite->picked_up == false))
+		Castaway *castaway = &castaways[i];
+		if ((castaway->alive == true && castaway->picked_up == false))
 		{
 			C2D_DrawSprite(&castaways[i].spr);
 		}
@@ -400,6 +414,18 @@ static void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
+
+	//TEST
+	char testbuf2[BUFFER_SIZE];
+	C2D_Text posx, posy, dx;
+	snprintf(testbuf2, sizeof(testbuf2), "diff_t %f ", diff_t);
+	C2D_TextParse(&posy, g_dynamicBuf, testbuf2);
+	C2D_TextOptimize(&posx);
+	C2D_TextOptimize(&posy);
+	C2D_TextOptimize(&dx);
+	C2D_DrawText(&posx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&posy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 190.0f, 0.5f, size, size, WHITE);
 }
 
 static void scenesExit(void)
@@ -424,6 +450,12 @@ int main(int argc, char *argv[])
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 	C2D_Prepare();
 	srand(time(NULL)); // Sets a seed for random numbers
+
+	// Timer
+	time_t current_epoch_time, next_spawn;
+	time(&current_epoch_time);
+	next_spawn = current_epoch_time + 10;
+	diff_t = difftime(next_spawn, current_epoch_time);
 
 	// Create screens
 	C3D_RenderTarget *top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
@@ -450,6 +482,15 @@ int main(int argc, char *argv[])
 		// Respond to user input
 		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysHeld();
+
+		//Timer
+		time(&current_epoch_time);						   // Get current EPOCH time from System
+		diff_t = difftime(next_spawn, current_epoch_time); // Time Difference
+		if (diff_t == 0)
+		{
+			next_spawn = current_epoch_time + 10;
+			spawnNewCastaway();
+		}
 
 		/* Control Interface Logic */
 		// break in order to return to hbmenu

@@ -18,8 +18,8 @@
 #define BOTTOM_SCREEN_HEIGHT 240
 
 // Game Configuratation Variables
-#define MAX_SHARKS 2
-#define MAX_CASTAWAY 6
+#define MAX_SHARKS 1
+#define MAX_CASTAWAY 2
 #define NEXT_LEVEL 100
 
 // Boat Variables
