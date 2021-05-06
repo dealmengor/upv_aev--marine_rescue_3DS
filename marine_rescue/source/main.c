@@ -1,13 +1,15 @@
 #include "marine_rescue.h"
 
 /* Globals */
-bool GAME_START = false;
 
 /* Socoreboard Variables */
+bool GAME_START = false;
 int points;
 int level;
 int lb_speedometer;
-int game_time;
+int next_spawn = 0;
+double diff_t = 0;
+int current_epoch_time = 0;
 
 /* Element Counters */
 int castawaycount;
@@ -17,14 +19,16 @@ int castawaysaved;
 /*Structures & Data Structures Declaratation*/
 static Castaway castaways[MAX_CASTAWAY];
 static Shark sharks[MAX_SHARKS];
+static Sea sea;
 static Lifeboat lifeboat;
 Lifeboat *lboat = &lifeboat;
-static Sea sea;
+static CoastGuardShip coastguardship;
+CoastGuardShip *cgship = &coastguardship;
 
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
+static C2D_SpriteSheet coastguard_spriteSheet;
 static C2D_SpriteSheet sharks_spriteSheet;
-static C2D_SpriteSheet lifeboat_spriteSheet;
 static C2D_SpriteSheet sea_spriteSheet;
 
 /* C2D_Text Declaration Variables */
@@ -37,11 +41,11 @@ static void init_sprites()
 	castaways_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/castaways.t3x");
 	if (!castaways_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
+	coastguard_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/coastguard.t3x");
+	if (!sea_spriteSheet)
+		svcBreak(USERBREAK_PANIC);
 	sharks_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sharks.t3x");
 	if (!sharks_spriteSheet)
-		svcBreak(USERBREAK_PANIC);
-	lifeboat_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/lifeboat.t3x");
-	if (!lifeboat_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 	sea_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sea.t3x");
 	if (!sea_spriteSheet)
@@ -62,16 +66,16 @@ static void init_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
-		Castaway *sprite = &castaways[i];
+		Castaway *castaway = &castaways[i];
 		// Random image, position, rotation and SPEED
-		C2D_SpriteFromSheet(&sprite->spr, castaways_spriteSheet, rand() % 1);
-		C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
-		C2D_SpriteSetPos(&sprite->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
-		C2D_SpriteSetRotation(&sprite->spr, C3D_Angle(rand() / (float)RAND_MAX));
-		sprite->dx = rand() * 4.0f / RAND_MAX - 2.0f;
-		sprite->dy = rand() * 4.0f / RAND_MAX - 2.0f;
-		sprite->alive = true;
-		sprite->picked_up = false;
+		C2D_SpriteFromSheet(&castaway->spr, castaways_spriteSheet, rand() % 1);
+		C2D_SpriteSetCenter(&castaway->spr, 0.5f, 0.5f);
+		C2D_SpriteSetPos(&castaway->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
+		C2D_SpriteSetRotation(&castaway->spr, C3D_Angle(rand() / (float)RAND_MAX));
+		castaway->dx = rand() * 4.0f / RAND_MAX - 2.0f;
+		castaway->dy = rand() * 4.0f / RAND_MAX - 2.0f;
+		castaway->alive = true;
+		castaway->picked_up = false;
 	}
 }
 
@@ -93,7 +97,7 @@ static void init_sharks()
 static void init_lifeboat()
 {
 	// Position, rotation and SPEED
-	C2D_SpriteFromSheet(&lboat->spr, lifeboat_spriteSheet, 0);
+	C2D_SpriteFromSheet(&lboat->spr, coastguard_spriteSheet, 0);
 	C2D_SpriteSetCenter(&lboat->spr, 0.5f, 0.5f);
 	C2D_SpriteSetPos(&lboat->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
 	C2D_SpriteSetRotationDegrees(&lboat->spr, 0);
@@ -110,26 +114,38 @@ static void init_lifeboat()
 	}
 }
 
+static void init_coastguardship()
+{
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&cgship->spr, coastguard_spriteSheet, 8);
+	C2D_SpriteSetCenter(&cgship->spr, 0.5f, 0.5f);
+	C2D_SpriteSetPos(&cgship->spr, TOP_SCREEN_WIDTH + 100, TOP_SCREEN_HEIGHT - 30);
+	C2D_SpriteSetRotationDegrees(&cgship->spr, 0);
+	cgship->speed = 1;
+	cgship->dx = cgship->speed;
+	cgship->dy = 0;
+}
+
 /* Motion Functions */
 static void moveSprites_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
-		Castaway *sprite = &castaways[i];
-		if ((sprite->alive == true))
+		Castaway *castaway = &castaways[i];
+		if ((castaway->alive == true))
 		{
-			C2D_SpriteMove(&sprite->spr, sprite->dx, sprite->dy);
-			C2D_SpriteRotateDegrees(&sprite->spr, 1.0f);
+			C2D_SpriteMove(&castaway->spr, castaway->dx, castaway->dy);
+			C2D_SpriteRotateDegrees(&castaway->spr, 1.0f);
 		}
 
 		// Check for collision with the screen boundaries
-		if ((sprite->spr.params.pos.x < sprite->spr.params.pos.w / 2.0f && sprite->dx < 0.0f) ||
-			(sprite->spr.params.pos.x > (TOP_SCREEN_WIDTH - (sprite->spr.params.pos.w / 2.0f)) && sprite->dx > 0.0f))
-			sprite->dx = -sprite->dx;
+		if ((castaway->spr.params.pos.x < castaway->spr.params.pos.w / 2.0f && castaway->dx < 0.0f) ||
+			(castaway->spr.params.pos.x > (TOP_SCREEN_WIDTH - (castaway->spr.params.pos.w / 2.0f)) && castaway->dx > 0.0f))
+			castaway->dx = -castaway->dx;
 
-		if ((sprite->spr.params.pos.y < sprite->spr.params.pos.h / 2.0f && sprite->dy < 0.0f) ||
-			(sprite->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (sprite->spr.params.pos.h / 2.0f)) && sprite->dy > 0.0f))
-			sprite->dy = -sprite->dy;
+		if ((castaway->spr.params.pos.y < castaway->spr.params.pos.h / 2.0f && castaway->dy < 0.0f) ||
+			(castaway->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (castaway->spr.params.pos.h / 2.0f)) && castaway->dy > 0.0f))
+			castaway->dy = -castaway->dy;
 	}
 }
 
@@ -149,6 +165,24 @@ static void moveSprites_sharks()
 		if ((sprite->spr.params.pos.y < sprite->spr.params.pos.h / 2.0f && sprite->dy < 0.0f) ||
 			(sprite->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (sprite->spr.params.pos.h / 2.0f)) && sprite->dy > 0.0f))
 			sprite->dy = -sprite->dy;
+	}
+}
+
+static void moveSprite_coastguardship()
+{
+	C2D_SpriteMove(&cgship->spr, cgship->dx, cgship->dy);
+	//Check for collision with the screen boundaries
+
+	// Left Boundarie
+	if (cgship->spr.params.pos.x < cgship->spr.params.pos.w - 300 && cgship->dx < 0.0f)
+	{
+		cgship->dx = -cgship->dx;
+		cgship->spr.params.pos.x = TOP_SCREEN_WIDTH + 100;
+	}
+	// Right Boundarie
+	else if (cgship->spr.params.pos.x > (TOP_SCREEN_WIDTH - (cgship->spr.params.pos.w / 2.0f)) && cgship->dx > 0.0f)
+	{
+		cgship->dx = -cgship->dx;
 	}
 }
 
@@ -243,6 +277,21 @@ static void lifeboatDeath(Lifeboat *lboat)
 	}
 }
 
+/* Spawn Controllers */
+static void spawnNewCastaway()
+{
+	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	{
+		Castaway *castaway = &castaways[i];
+		if ((castaway->alive == false) || (castaway->picked_up == true))
+		{
+			castaway->alive = true;
+			castaway->picked_up = false;
+			break;
+		}
+	}
+}
+
 /* Collision Functions */
 static void collisionShark_Castaway()
 {
@@ -255,7 +304,6 @@ static void collisionShark_Castaway()
 			abs(shark->spr.params.pos.y - castaways[i].spr.params.pos.y) < 20.0f)
 		{
 			castaway->alive = false;
-			// C2D_SpriteSetPos(&castaway->spr, TOP_SCREEN_WIDTH / 2, -500.0f);
 		}
 	}
 }
@@ -297,8 +345,8 @@ static void drawer_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
-		Castaway *sprite = &castaways[i];
-		if ((sprite->alive == true && sprite->picked_up == false))
+		Castaway *castaway = &castaways[i];
+		if ((castaway->alive == true && castaway->picked_up == false))
 		{
 			C2D_DrawSprite(&castaways[i].spr);
 		}
@@ -313,11 +361,15 @@ static void drawer_sharks()
 
 static void drawer_lifeboat()
 {
-
 	if ((lboat->alive == true))
 	{
 		C2D_DrawSprite(&lifeboat.spr);
 	}
+}
+
+static void drawer_coastguardship()
+{
+	C2D_DrawSprite(&coastguardship.spr);
 }
 
 static void sceneInit_bottom(void)
@@ -364,6 +416,22 @@ static void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
+
+	//TEST
+	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE];
+	C2D_Text posx, posy, dx;
+	// snprintf(testbuf, sizeof(testbuf), "next_spawn: %d ", next_spawn);
+	snprintf(testbuf2, sizeof(testbuf2), "diff_t %f ", diff_t);
+	// snprintf(testbuf3, sizeof(testbuf3), "current_epoch_time %d ", current_epoch_time);
+	C2D_TextParse(&posx, g_dynamicBuf, testbuf);
+	C2D_TextParse(&posy, g_dynamicBuf, testbuf2);
+	C2D_TextParse(&dx, g_dynamicBuf, testbuf3);
+	C2D_TextOptimize(&posx);
+	C2D_TextOptimize(&posy);
+	C2D_TextOptimize(&dx);
+	C2D_DrawText(&posx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&posy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 190.0f, 0.5f, size, size, WHITE);
 }
 
 static void scenesExit(void)
@@ -375,7 +443,7 @@ static void scenesExit(void)
 	// Delete graphics
 	C2D_SpriteSheetFree(castaways_spriteSheet);
 	C2D_SpriteSheetFree(sharks_spriteSheet);
-	C2D_SpriteSheetFree(lifeboat_spriteSheet);
+	C2D_SpriteSheetFree(coastguard_spriteSheet);
 	C2D_SpriteSheetFree(sea_spriteSheet);
 }
 
@@ -389,6 +457,12 @@ int main(int argc, char *argv[])
 	C2D_Prepare();
 	srand(time(NULL)); // Sets a seed for random numbers
 
+	// Timer
+	time_t current_epoch_time, next_spawn;
+	time(&current_epoch_time);
+	next_spawn = current_epoch_time + 10;
+	diff_t = difftime(next_spawn, current_epoch_time);
+
 	// Create screens
 	C3D_RenderTarget *top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
 	C3D_RenderTarget *bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
@@ -401,6 +475,7 @@ int main(int argc, char *argv[])
 	init_castaways();
 	init_sharks();
 	init_lifeboat();
+	init_coastguardship();
 
 	// Initialize the scene for Scoreboard
 	sceneInit_bottom();
@@ -413,6 +488,15 @@ int main(int argc, char *argv[])
 		// Respond to user input
 		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysHeld();
+
+		//Timer
+		time(&current_epoch_time);						   // Get current EPOCH time from System
+		diff_t = difftime(next_spawn, current_epoch_time); // Time Difference
+		if (diff_t == 0)
+		{
+			next_spawn = current_epoch_time + 10;
+			spawnNewCastaway();
+		}
 
 		/* Control Interface Logic */
 		// break in order to return to hbmenu
@@ -427,6 +511,7 @@ int main(int argc, char *argv[])
 		moveSprites_castaways();
 		moveSprites_sharks();
 		moveLifeboat_sprite();
+		moveSprite_coastguardship();
 
 		// Collision Detectors
 		collisionShark_Castaway();
@@ -445,6 +530,7 @@ int main(int argc, char *argv[])
 		drawer_castaways();
 		drawer_sharks();
 		drawer_lifeboat();
+		drawer_coastguardship();
 
 		C2D_Flush(); // Ensures all 2D objects so far have been drawn.
 

@@ -1,7 +1,6 @@
 // Main Header File
 
 /* Includes */
-
 #include <citro2d.h>
 #include <assert.h>
 #include <string.h>
@@ -19,8 +18,8 @@
 #define BOTTOM_SCREEN_HEIGHT 240
 
 // Game Configuratation Variables
-#define MAX_SHARKS 2
-#define MAX_CASTAWAY 6
+#define MAX_SHARKS 1
+#define MAX_CASTAWAY 2
 #define NEXT_LEVEL 100
 
 // Boat Variables
@@ -44,7 +43,7 @@
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
+    float dx, dy; // velocity
     bool alive;
     bool picked_up;
 
@@ -54,14 +53,15 @@ typedef struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
-} CoastGuard;
+    float dx, dy; // velocity only on the horizontal x-axis
+    float speed;
+} CoastGuardShip;
 
 // Lifeboat sprite struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
+    float dx, dy; // velocity
     int speed;
     int lifes;
     int fuel;
@@ -74,12 +74,12 @@ typedef struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
+    float dx, dy; // velocity
 } Sea;
 
 // Shark sprite struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
+    float dx, dy; // velocity
 } Shark;
