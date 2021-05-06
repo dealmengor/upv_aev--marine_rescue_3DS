@@ -414,18 +414,6 @@ static void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
-
-	//TEST
-	char testbuf2[BUFFER_SIZE];
-	C2D_Text posx, posy, dx;
-	snprintf(testbuf2, sizeof(testbuf2), "diff_t %f ", diff_t);
-	C2D_TextParse(&posy, g_dynamicBuf, testbuf2);
-	C2D_TextOptimize(&posx);
-	C2D_TextOptimize(&posy);
-	C2D_TextOptimize(&dx);
-	C2D_DrawText(&posx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&posy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 190.0f, 0.5f, size, size, WHITE);
 }
 
 static void scenesExit(void)
