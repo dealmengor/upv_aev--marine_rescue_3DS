@@ -1,11 +1,13 @@
 #include "marine_rescue.h"
 
 /* Globals */
+bool GAME_START = false;
 
 /*Structures & Data Structures Declaratation*/
 static Castaway castaways[MAX_CASTAWAY];
 static Shark sharks[MAX_SHARKS];
 static Lifeboat lifeboat;
+Lifeboat *lboat = &lifeboat;
 static Sea sea;
 
 /* Spritesheets Declaratation */
@@ -74,7 +76,7 @@ static void init_sharks()
 
 static void init_lifeboat()
 {
-	Lifeboat *lboat = &lifeboat;
+
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&lboat->spr, lifeboat_spriteSheet, 0);
 	C2D_SpriteSetCenter(&lboat->spr, 0.5f, 0.5f);
@@ -84,6 +86,11 @@ static void init_lifeboat()
 	lboat->dy = rand() * 4.0f / RAND_MAX - 2.0f;
 	lboat->speed = 1;
 	lboat->alive = true;
+	if ((GAME_START == false))
+	{
+		GAME_START = true;
+		lboat->lifes = BOAT_LIFES;
+	}
 }
 
 /* Motion Functions */
@@ -130,7 +137,7 @@ static void moveSprites_sharks()
 
 static void moveLifeboat_sprite()
 {
-	Lifeboat *lboat = &lifeboat;
+
 	if ((lboat->alive == true))
 	{
 		//LEFT BORDER
@@ -167,7 +174,7 @@ static void moveLifeboat_sprite()
 
 static void moveLifeboatController(u32 kHeld)
 {
-	Lifeboat *lboat = &lifeboat;
+
 	//UP
 	if (kHeld & KEY_UP)
 	{
@@ -193,8 +200,11 @@ static void moveLifeboatController(u32 kHeld)
 /* Life Controllers */
 static void lifeboatDeath(Lifeboat *lboat)
 {
-	lboat->lifes = BOAT_LIFES - 1;
-	lboat->fuel = 60;
+	if ((lboat->alive == true))
+	{
+		lboat->lifes = lboat->lifes - 1;
+		lboat->fuel = 60;
+	}
 	if ((lboat->lifes > 0))
 	{
 		init_lifeboat();
@@ -228,7 +238,6 @@ static void collisionShark_lifeboat()
 	for (size_t i = 0; i < MAX_SHARKS; i++)
 	{
 		Shark *shark = &sharks[i];
-		Lifeboat *lboat = &lifeboat;
 
 		if (abs(shark->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
 			abs(shark->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
@@ -264,7 +273,7 @@ static void drawer_sharks()
 
 static void drawer_lifeboat()
 {
-	Lifeboat *lboat = &lifeboat;
+
 	if ((lboat->alive == true))
 	{
 		C2D_DrawSprite(&lifeboat.spr);
@@ -276,6 +285,7 @@ int main(int argc, char *argv[])
 	// Init libs
 	romfsInit();
 	gfxInitDefault();
+	consoleInit(GFX_BOTTOM, NULL);
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 	C2D_Prepare();
@@ -333,6 +343,12 @@ int main(int argc, char *argv[])
 		drawer_castaways();
 		drawer_sharks();
 		drawer_lifeboat();
+
+		//Prints
+		printf("\x1b[2;1HCPU:     %6.2f%%\x1b[K", C3D_GetProcessingTime() * 6.0f);
+		printf("\x1b[3;1HGPU:     %6.2f%%\x1b[K", C3D_GetDrawingTime() * 6.0f);
+		printf("\x1b[4;1HCmdBuf:  %6.2f%%\x1b[K", C3D_GetCmdBufUsage() * 100.0f);
+		printf("\x1b[5;1HNumero de Vidas: %d\x1b[K", lboat->lifes);
 
 		C3D_FrameEnd(0); // Finish render the scene
 	}
