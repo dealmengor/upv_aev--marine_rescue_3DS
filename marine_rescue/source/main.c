@@ -74,15 +74,16 @@ static void init_sharks()
 
 static void init_lifeboat()
 {
-	Lifeboat *sprite = &lifeboat;
+	Lifeboat *lboat = &lifeboat;
 	// Position, rotation and SPEED
-	C2D_SpriteFromSheet(&sprite->spr, lifeboat_spriteSheet, 0);
-	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
-	C2D_SpriteSetPos(&sprite->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
-	C2D_SpriteSetRotationDegrees(&sprite->spr, 0);
-	sprite->dx = rand() * 4.0f / RAND_MAX - 2.0f;
-	sprite->dy = rand() * 4.0f / RAND_MAX - 2.0f;
-	sprite->speed = 1;
+	C2D_SpriteFromSheet(&lboat->spr, lifeboat_spriteSheet, 0);
+	C2D_SpriteSetCenter(&lboat->spr, 0.5f, 0.5f);
+	C2D_SpriteSetPos(&lboat->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
+	C2D_SpriteSetRotationDegrees(&lboat->spr, 0);
+	lboat->dx = rand() * 4.0f / RAND_MAX - 2.0f;
+	lboat->dy = rand() * 4.0f / RAND_MAX - 2.0f;
+	lboat->speed = 1;
+	lboat->alive = true;
 }
 
 /* Motion Functions */
@@ -129,64 +130,83 @@ static void moveSprites_sharks()
 
 static void moveLifeboat_sprite()
 {
-	Lifeboat *sprite = &lifeboat;
-	//LEFT BORDER
-	if (sprite->spr.params.pos.x < TOP_SCREEN_WIDTH && sprite->spr.params.pos.x > 0)
+	Lifeboat *lboat = &lifeboat;
+	if ((lboat->alive == true))
 	{
-		C2D_SpriteMove(&sprite->spr, sprite->dx, 0);
-	}
-	//RIGHT BORDER
-	else
-	{
-		if (sprite->spr.params.pos.x >= TOP_SCREEN_WIDTH)
-			C2D_SpriteMove(&sprite->spr, -sprite->speed, 0);
-		else
-			C2D_SpriteMove(&sprite->spr, sprite->speed, 0);
-	}
-
-	if (sprite->spr.params.pos.y <= TOP_SCREEN_HEIGHT && sprite->spr.params.pos.y > 0)
-	{
-		C2D_SpriteMove(&sprite->spr, 0, sprite->dy);
-	}
-	else
-	{
-		if (sprite->spr.params.pos.y > TOP_SCREEN_HEIGHT)
+		//LEFT BORDER
+		if (lboat->spr.params.pos.x < TOP_SCREEN_WIDTH && lboat->spr.params.pos.x > 0)
 		{
-			C2D_SpriteMove(&sprite->spr, 0, -sprite->speed);
+			C2D_SpriteMove(&lboat->spr, lboat->dx, 0);
+		}
+		//RIGHT BORDER
+		else
+		{
+			if (lboat->spr.params.pos.x >= TOP_SCREEN_WIDTH)
+				C2D_SpriteMove(&lboat->spr, -lboat->speed, 0);
+			else
+				C2D_SpriteMove(&lboat->spr, lboat->speed, 0);
+		}
+
+		if (lboat->spr.params.pos.y <= TOP_SCREEN_HEIGHT && lboat->spr.params.pos.y > 0)
+		{
+			C2D_SpriteMove(&lboat->spr, 0, lboat->dy);
 		}
 		else
-			C2D_SpriteMove(&sprite->spr, 0, sprite->speed);
+		{
+			if (lboat->spr.params.pos.y > TOP_SCREEN_HEIGHT)
+			{
+				C2D_SpriteMove(&lboat->spr, 0, -lboat->speed);
+			}
+			else
+				C2D_SpriteMove(&lboat->spr, 0, lboat->speed);
+		}
+		lboat->dx = 0;
+		lboat->dy = 0;
 	}
-	sprite->dx = 0;
-	sprite->dy = 0;
 }
 
 static void moveLifeboatController(u32 kHeld)
 {
-	Lifeboat *sprite = &lifeboat;
+	Lifeboat *lboat = &lifeboat;
 	//UP
 	if (kHeld & KEY_UP)
 	{
-		sprite->dy += -sprite->speed;
+		lboat->dy += -lboat->speed;
 	}
 	// //DOWN
 	if (kHeld & KEY_DOWN)
 	{
-		sprite->dy += sprite->speed;
+		lboat->dy += lboat->speed;
 	}
 	//LEFT
 	if (kHeld & KEY_LEFT)
 	{
-		sprite->dx += -sprite->speed;
+		lboat->dx += -lboat->speed;
 	}
 	//RIGHT
 	if (kHeld & KEY_RIGHT)
 	{
-		sprite->dx += sprite->speed;
+		lboat->dx += lboat->speed;
 	}
 }
 
-/* Collisions Functions */
+/* Life Controllers */
+static void lifeboatDeath(Lifeboat *lboat)
+{
+	lboat->lifes = BOAT_LIFES - 1;
+	lboat->fuel = 60;
+	if ((lboat->lifes > 0))
+	{
+		init_lifeboat();
+	}
+	else
+	{
+		lboat->alive = false;
+		//TODO: Call gameover function
+	}
+}
+
+/* Collision Functions */
 static void collisionShark_Castaway()
 {
 	for (size_t i = 0; i < MAX_SHARKS; i++)
@@ -203,7 +223,22 @@ static void collisionShark_Castaway()
 	}
 }
 
-/* Drawers Functions */
+static void collisionShark_lifeboat()
+{
+	for (size_t i = 0; i < MAX_SHARKS; i++)
+	{
+		Shark *shark = &sharks[i];
+		Lifeboat *lboat = &lifeboat;
+
+		if (abs(shark->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
+			abs(shark->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
+		{
+			lifeboatDeath(lboat);
+		}
+	}
+}
+
+/* Drawer Functions */
 static void drawer_sea()
 {
 	C2D_DrawSprite(&sea.spr);
@@ -229,7 +264,11 @@ static void drawer_sharks()
 
 static void drawer_lifeboat()
 {
-	C2D_DrawSprite(&lifeboat.spr);
+	Lifeboat *lboat = &lifeboat;
+	if ((lboat->alive == true))
+	{
+		C2D_DrawSprite(&lifeboat.spr);
+	}
 }
 
 int main(int argc, char *argv[])
@@ -280,6 +319,7 @@ int main(int argc, char *argv[])
 
 		// Collision Detectors
 		collisionShark_Castaway();
+		collisionShark_lifeboat();
 
 		// Start render the scene
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);

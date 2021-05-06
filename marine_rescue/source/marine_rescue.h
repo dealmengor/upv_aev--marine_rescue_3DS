@@ -21,6 +21,7 @@
 // Game Variables
 #define MAX_SHARKS 2
 #define MAX_CASTAWAY 2
+#define BOAT_LIFES 3
 
 /* Structures */
 
@@ -30,6 +31,7 @@ typedef struct
     C2D_Sprite spr;
     float dx, dy; // System Reference
     bool alive;
+
 } Castaway;
 
 // CoastGuard sprite struct
@@ -45,6 +47,9 @@ typedef struct
     C2D_Sprite spr;
     float dx, dy; // System Reference
     int speed;
+    int lifes;
+    int fuel;
+    bool alive;
 
 } Lifeboat;
 
