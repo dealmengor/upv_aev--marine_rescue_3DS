@@ -19,8 +19,9 @@ static Castaway castaways[MAX_CASTAWAY];
 static Shark sharks[MAX_SHARKS];
 static Sea sea;
 static Lifeboat lifeboat;
-Lifeboat *lboat = &lifeboat;
 static CoastGuardShip coastguardship;
+
+Lifeboat *lboat = &lifeboat;
 CoastGuardShip *cgship = &coastguardship;
 
 /* Spritesheets Declaratation */
@@ -82,15 +83,15 @@ static void init_sharks()
 {
 	for (size_t i = 0; i < MAX_SHARKS; i++)
 	{
-		Shark *sprite = &sharks[i];
+		Shark *shark = &sharks[i];
 		// Random image, position, rotation and SPEED
-		C2D_SpriteFromSheet(&sprite->spr, sharks_spriteSheet, rand() % 1);
-		C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
-		C2D_SpriteSetPos(&sprite->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
-		C2D_SpriteSetRotation(&sprite->spr, C3D_Angle(rand() / (float)RAND_MAX));
-		sprite->dx = rand() * 4.0f / RAND_MAX - 2.0f;
-		sprite->dy = rand() * 4.0f / RAND_MAX - 2.0f;
-		sharkcount += 1;
+		C2D_SpriteFromSheet(&shark->spr, sharks_spriteSheet, rand() % 1);
+		C2D_SpriteSetCenter(&shark->spr, 0.5f, 0.5f);
+		C2D_SpriteSetPos(&shark->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
+		C2D_SpriteSetRotation(&shark->spr, C3D_Angle(rand() / (float)RAND_MAX));
+		shark->dx = rand() * 4.0f / RAND_MAX - 2.0f;
+		shark->dy = rand() * 4.0f / RAND_MAX - 2.0f;
+		shark->id = i;
 	}
 }
 
@@ -154,18 +155,18 @@ static void moveSprites_sharks()
 {
 	for (size_t i = 0; i < MAX_SHARKS; i++)
 	{
-		Shark *sprite = &sharks[i];
-		C2D_SpriteMove(&sprite->spr, sprite->dx, sprite->dy);
-		C2D_SpriteRotateDegrees(&sprite->spr, 1.0f);
+		Shark *shark = &sharks[i];
+		C2D_SpriteMove(&shark->spr, shark->dx, shark->dy);
+		C2D_SpriteRotateDegrees(&shark->spr, 1.0f);
 
 		// Check for collision with the screen boundaries
-		if ((sprite->spr.params.pos.x < sprite->spr.params.pos.w / 2.0f && sprite->dx < 0.0f) ||
-			(sprite->spr.params.pos.x > (TOP_SCREEN_WIDTH - (sprite->spr.params.pos.w / 2.0f)) && sprite->dx > 0.0f))
-			sprite->dx = -sprite->dx;
+		if ((shark->spr.params.pos.x < shark->spr.params.pos.w / 2.0f && shark->dx < 0.0f) ||
+			(shark->spr.params.pos.x > (TOP_SCREEN_WIDTH - (shark->spr.params.pos.w / 2.0f)) && shark->dx > 0.0f))
+			shark->dx = -shark->dx;
 
-		if ((sprite->spr.params.pos.y < sprite->spr.params.pos.h / 2.0f && sprite->dy < 0.0f) ||
-			(sprite->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (sprite->spr.params.pos.h / 2.0f)) && sprite->dy > 0.0f))
-			sprite->dy = -sprite->dy;
+		if ((shark->spr.params.pos.y < shark->spr.params.pos.h / 2.0f && shark->dy < 0.0f) ||
+			(shark->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (shark->spr.params.pos.h / 2.0f)) && shark->dy > 0.0f))
+			shark->dy = -shark->dy;
 	}
 }
 
@@ -249,6 +250,16 @@ static void moveLifeboatController(u32 kHeld)
 	}
 }
 
+/* Bounce Controllers */
+static void bounceCastaway_Coastguardship(Castaway *castaway)
+{
+	if ((castaway->picked_up == false) && (castaway->alive = true))
+	{
+		castaway->dx = -castaway->dx;
+		castaway->dy = -castaway->dy;
+	}
+}
+
 /* Lifeboat Controllers */
 static void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway)
 {
@@ -294,6 +305,23 @@ static void spawnNewCastaway()
 }
 
 /* Collision Functions */
+static void collisionShark_Shark()
+{
+	for (size_t i = 0; i < MAX_SHARKS; i++)
+	{
+		Shark *shark = &sharks[i];
+		Shark *shark2 = &sharks[i];
+
+		if (abs(shark->spr.params.pos.x - shark2[i].spr.params.pos.x) < 20.0f &&
+			abs(shark->spr.params.pos.y - shark2[i].spr.params.pos.y) < 20.0f)
+		// &&shark->id != shark2[i].id
+		{
+			shark->dx = -shark->dx;
+			shark->dy = -shark->dy;
+		}
+	}
+}
+
 static void collisionShark_Castaway()
 {
 	for (size_t i = 0; i < MAX_SHARKS; i++)
@@ -353,6 +381,19 @@ static void collisionCoastGuardShip_Lifeboat()
 				castawaysaved += 1;
 			}
 			lboat->seatcount = 0;
+		}
+	}
+}
+
+static void collisionCastaway_Coastguardship()
+{
+	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	{
+		Castaway *castaway = &castaways[i];
+		if (abs(castaway->spr.params.pos.x - cgship->spr.params.pos.x) < 40.0f &&
+			abs(castaway->spr.params.pos.y - cgship->spr.params.pos.y) < 30.0f)
+		{
+			bounceCastaway_Coastguardship(castaway);
 		}
 	}
 }
@@ -525,10 +566,12 @@ int main(int argc, char *argv[])
 		moveSprite_coastguardship();
 
 		// Collision Detectors
+		// collisionShark_Shark();
 		collisionShark_Castaway();
 		collisionShark_Lifeboat();
 		collisionCastaway_Lifeboat();
 		collisionCoastGuardShip_Lifeboat();
+		collisionCastaway_Coastguardship();
 
 		/* Start Render the scene */
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
