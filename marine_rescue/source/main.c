@@ -7,9 +7,7 @@ bool GAME_START = false;
 int points;
 int level;
 int lb_speedometer;
-int next_spawn = 0;
 double diff_t = 0;
-int current_epoch_time = 0;
 
 /* Element Counters */
 int castawaycount;
@@ -418,14 +416,10 @@ static void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
 
 	//TEST
-	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE];
+	char testbuf2[BUFFER_SIZE];
 	C2D_Text posx, posy, dx;
-	// snprintf(testbuf, sizeof(testbuf), "next_spawn: %d ", next_spawn);
 	snprintf(testbuf2, sizeof(testbuf2), "diff_t %f ", diff_t);
-	// snprintf(testbuf3, sizeof(testbuf3), "current_epoch_time %d ", current_epoch_time);
-	C2D_TextParse(&posx, g_dynamicBuf, testbuf);
 	C2D_TextParse(&posy, g_dynamicBuf, testbuf2);
-	C2D_TextParse(&dx, g_dynamicBuf, testbuf3);
 	C2D_TextOptimize(&posx);
 	C2D_TextOptimize(&posy);
 	C2D_TextOptimize(&dx);
