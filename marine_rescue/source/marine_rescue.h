@@ -21,6 +21,7 @@
 // Game Variables
 #define MAX_SHARKS 2
 #define MAX_CASTAWAY 2
+#define MAX_SEAS 2
 
 /* Structures */
 

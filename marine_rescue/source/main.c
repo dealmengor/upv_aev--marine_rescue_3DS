@@ -6,7 +6,10 @@
 static Castaway castaways[MAX_CASTAWAY];
 static Shark sharks[MAX_SHARKS];
 static Lifeboat lifeboat;
-static Sea sea;
+static Sea seas[MAX_SEAS];
+Sea *sea1;
+Sea *sea2;
+bool rotationsea;
 
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
@@ -30,14 +33,22 @@ static void init_sprites()
 	if (!sea_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 }
+
 static void init_sea()
 {
-	Sea *sprite = &sea;
-	// Position, rotation and SPEED
-	C2D_SpriteFromSheet(&sprite->spr, sea_spriteSheet, 0);
-	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
+	sea1 = &seas[0];
+	//Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sea1->spr, sea_spriteSheet, 0);
+	C2D_SpriteSetCenter(&sea1->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sea1->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sea1->dy = 1.0f;
+
+	sea2 = &seas[1];
+	//Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sea2->spr, sea_spriteSheet, 1);
+	C2D_SpriteSetCenter(&sea2->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sea2->spr, TOP_SCREEN_WIDTH / 2, -20.0f);
+	sea2->dy = 1.0f;
 }
 
 static void init_castaways()
@@ -45,7 +56,7 @@ static void init_castaways()
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
 		Castaway *sprite = &castaways[i];
-		// Random image, position, rotation and SPEED
+		//Random image, position, rotation and SPEED
 		C2D_SpriteFromSheet(&sprite->spr, castaways_spriteSheet, rand() % 1);
 		C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
 		C2D_SpriteSetPos(&sprite->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
@@ -60,7 +71,7 @@ static void init_sharks()
 	for (size_t i = 0; i < MAX_SHARKS; i++)
 	{
 		Shark *sprite = &sharks[i];
-		// Random image, position, rotation and SPEED
+		//Random image, position, rotation and SPEED
 		C2D_SpriteFromSheet(&sprite->spr, sharks_spriteSheet, rand() % 1);
 		C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
 		C2D_SpriteSetPos(&sprite->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
@@ -73,7 +84,7 @@ static void init_sharks()
 static void init_lifeboat()
 {
 	Lifeboat *sprite = &lifeboat;
-	// Position, rotation and SPEED
+	//Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, lifeboat_spriteSheet, 0);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
 	C2D_SpriteSetPos(&sprite->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
@@ -92,7 +103,7 @@ static void moveSprites_castaways()
 		C2D_SpriteMove(&sprite->spr, sprite->dx, sprite->dy);
 		C2D_SpriteRotateDegrees(&sprite->spr, 1.0f);
 
-		// Check for collision with the screen boundaries
+		//Check for collision with the screen boundaries
 		if ((sprite->spr.params.pos.x < sprite->spr.params.pos.w / 2.0f && sprite->dx < 0.0f) ||
 			(sprite->spr.params.pos.x > (TOP_SCREEN_WIDTH - (sprite->spr.params.pos.w / 2.0f)) && sprite->dx > 0.0f))
 			sprite->dx = -sprite->dx;
@@ -111,7 +122,7 @@ static void moveSprites_sharks()
 		C2D_SpriteMove(&sprite->spr, sprite->dx, sprite->dy);
 		C2D_SpriteRotateDegrees(&sprite->spr, 1.0f);
 
-		// Check for collision with the screen boundaries
+		//Check for collision with the screen boundaries
 		if ((sprite->spr.params.pos.x < sprite->spr.params.pos.w / 2.0f && sprite->dx < 0.0f) ||
 			(sprite->spr.params.pos.x > (TOP_SCREEN_WIDTH - (sprite->spr.params.pos.w / 2.0f)) && sprite->dx > 0.0f))
 			sprite->dx = -sprite->dx;
@@ -164,7 +175,7 @@ static void moveLifeboatController(u32 kHeld)
 	{
 		sprite->dy += -sprite->speed;
 	}
-	// //DOWN
+	////DOWN
 	if (kHeld & KEY_DOWN)
 	{
 		sprite->dy += sprite->speed;
@@ -181,10 +192,31 @@ static void moveLifeboatController(u32 kHeld)
 	}
 }
 
+static void rotationSea(Sea *sea1, Sea *sea2)
+{
+	if (sea2->spr.params.pos.y == TOP_SCREEN_HEIGHT)
+	{
+		C2D_SpriteSetPos(&sea1->spr, TOP_SCREEN_WIDTH / 2, 0.0f);
+		rotationsea = true;
+	}
+	if (rotationsea == true)
+	{
+		if (sea1->spr.params.pos.y == TOP_SCREEN_HEIGHT && sea2->spr.params.pos.y > 300.0f)
+		{
+			C2D_SpriteSetPos(&sea2->spr, TOP_SCREEN_WIDTH / 2, 0.0f);
+		}
+		if (sea2->spr.params.pos.y == TOP_SCREEN_HEIGHT && sea1->spr.params.pos.y > 300.0f)
+		{
+			C2D_SpriteSetPos(&sea1->spr, TOP_SCREEN_WIDTH / 2, 0.0f);
+		}
+	}
+}
+
 /* Drawers Functions */
 static void drawer_sea()
 {
-	C2D_DrawSprite(&sea.spr);
+	C2D_DrawSprite(&seas[0].spr);
+	C2D_DrawSprite(&seas[1].spr);
 }
 
 static void drawer_castaways()
@@ -207,51 +239,51 @@ static void drawer_lifeboat()
 int main(int argc, char *argv[])
 {
 
-	// Init libs
+	//Init libs
 	romfsInit();
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 	C2D_Prepare();
-	srand(time(NULL)); // Sets a seed for random numbers
+	srand(time(NULL)); //Sets a seed for random numbers
 
-	// Create screens
+	//Create screens
 	C3D_RenderTarget *top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
 	//C3D_RenderTarget *bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
-	// Load graphics Spritesheets
+	//Load graphics Spritesheets
 	init_sprites();
 
-	// Initialize sprites for Structures
+	//Initialize sprites for Structures
 	init_sea();
 	init_castaways();
 	init_sharks();
 	init_lifeboat();
 
-	// Main loop
+	//Main loop
 	while (aptMainLoop())
 	{
 		hidScanInput();
 
-		// Respond to user input
+		//Respond to user input
 		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysHeld();
 
-		// Interface Control Logic
-		// break in order to return to hbmenu
+		//Interface Control Logic
+		//break in order to return to hbmenu
 		if (kDown & KEY_START)
 			break;
 
-		// D-PAD Controller
+		//D-PAD Controller
 		if (kHeld & KEY_UP || kHeld & KEY_DOWN || kHeld & KEY_LEFT || kHeld & KEY_RIGHT)
 			moveLifeboatController(kHeld);
 
-		// Move sprites
+		//Move sprites
 		moveSprites_castaways();
 		moveSprites_sharks();
 		moveLifeboat_sprite();
 
-		// Start render the scene
+		//Start render the scene
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 
 		//TOP Screen
@@ -264,16 +296,19 @@ int main(int argc, char *argv[])
 		drawer_sharks();
 		drawer_lifeboat();
 
-		C3D_FrameEnd(0); // Finish render the scene
+		//Sea
+		rotationSea(sea1, sea2);
+
+		C3D_FrameEnd(0); //Finish render the scene
 	}
 
-	// Delete graphics
+	//Delete graphics
 	C2D_SpriteSheetFree(castaways_spriteSheet);
 	C2D_SpriteSheetFree(sharks_spriteSheet);
 	C2D_SpriteSheetFree(lifeboat_spriteSheet);
 	C2D_SpriteSheetFree(sea_spriteSheet);
 
-	// Deinit libs
+	//Deinit libs
 	C2D_Fini();
 	C3D_Fini();
 	gfxExit();
