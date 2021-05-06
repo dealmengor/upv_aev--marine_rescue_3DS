@@ -321,12 +321,27 @@ static void drawer_scoreboard(float size)
 	C2D_DrawText(&g_staticText[0], C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 150.0f, 25.0f, 0.5f, size, size, WHITE);
 
 	// Generate and draw dynamic text
-	char buf[BUFFER_SIZE];
-	C2D_Text dynText;
+	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE];
+	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers;
 	snprintf(buf, sizeof(buf), "Vidas: %d ", lboat->lifes);
-	C2D_TextParse(&dynText, g_dynamicBuf, buf);
-	C2D_TextOptimize(&dynText);
-	C2D_DrawText(&dynText, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
+	snprintf(buf2, sizeof(buf), "Puntos: %d ", 0);
+	snprintf(buf3, sizeof(buf), "Nivel: %d ", 1);
+	snprintf(buf4, sizeof(buf), "Pasajeros: %d ", 1);
+
+	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
+	C2D_TextParse(&dynText_points, g_dynamicBuf, buf2);
+	C2D_TextParse(&dynText_levels, g_dynamicBuf, buf3);
+	C2D_TextParse(&dynText_passengers, g_dynamicBuf, buf4);
+
+	C2D_TextOptimize(&dynText_lifes);
+	C2D_TextOptimize(&dynText_points);
+	C2D_TextOptimize(&dynText_levels);
+	C2D_TextOptimize(&dynText_passengers);
+
+	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
 static void scenesExit(void)
