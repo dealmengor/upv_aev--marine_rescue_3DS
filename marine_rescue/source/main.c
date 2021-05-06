@@ -6,9 +6,6 @@ bool GAME_START = false;
 /* Socoreboard Variables */
 int points;
 int level;
-int lifes;
-int seatcount;
-int fuel;
 int lb_speedometer;
 int game_time;
 
@@ -74,6 +71,7 @@ static void init_castaways()
 		sprite->dx = rand() * 4.0f / RAND_MAX - 2.0f;
 		sprite->dy = rand() * 4.0f / RAND_MAX - 2.0f;
 		sprite->alive = true;
+		sprite->picked_up = false;
 	}
 }
 
@@ -94,7 +92,6 @@ static void init_sharks()
 
 static void init_lifeboat()
 {
-
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&lboat->spr, lifeboat_spriteSheet, 0);
 	C2D_SpriteSetCenter(&lboat->spr, 0.5f, 0.5f);
@@ -102,8 +99,10 @@ static void init_lifeboat()
 	C2D_SpriteSetRotationDegrees(&lboat->spr, 0);
 	lboat->dx = rand() * 4.0f / RAND_MAX - 2.0f;
 	lboat->dy = rand() * 4.0f / RAND_MAX - 2.0f;
-	lboat->speed = 1;
+	lboat->speed = BOAT_SPEED;
 	lboat->alive = true;
+	lboat->seatcount = BOAT_SEAT_COUNT;
+
 	if ((GAME_START == false))
 	{
 		GAME_START = true;
@@ -216,6 +215,15 @@ static void moveLifeboatController(u32 kHeld)
 }
 
 /* Life Controllers */
+static void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway)
+{
+	if ((lboat->seatcount < 3) && (castaway->picked_up == false) && (lboat->alive = true))
+	{
+		lboat->seatcount = lboat->seatcount + 1;
+		castaway->picked_up = true;
+	}
+}
+
 static void lifeboatDeath(Lifeboat *lboat)
 {
 	if ((lboat->alive == true))
@@ -230,6 +238,7 @@ static void lifeboatDeath(Lifeboat *lboat)
 	else
 	{
 		lboat->alive = false;
+		lboat->seatcount = BOAT_SEAT_COUNT;
 		//TODO: Call gameover function
 	}
 }
@@ -251,7 +260,7 @@ static void collisionShark_Castaway()
 	}
 }
 
-static void collisionShark_lifeboat()
+static void collisionShark_Lifeboat()
 {
 	for (size_t i = 0; i < MAX_SHARKS; i++)
 	{
@@ -261,6 +270,19 @@ static void collisionShark_lifeboat()
 			abs(shark->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
 		{
 			lifeboatDeath(lboat);
+		}
+	}
+}
+
+static void collisionCastaway_Lifeboat()
+{
+	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	{
+		Castaway *castaway = &castaways[i];
+		if (abs(castaway->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
+			abs(castaway->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
+		{
+			lifeboatpickUp(lboat, castaway);
 		}
 	}
 }
@@ -276,7 +298,7 @@ static void drawer_castaways()
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
 		Castaway *sprite = &castaways[i];
-		if ((sprite->alive == true))
+		if ((sprite->alive == true && sprite->picked_up == false))
 		{
 			C2D_DrawSprite(&castaways[i].spr);
 		}
@@ -326,7 +348,7 @@ static void drawer_scoreboard(float size)
 	snprintf(buf, sizeof(buf), "Vidas: %d ", lboat->lifes);
 	snprintf(buf2, sizeof(buf), "Puntos: %d ", 0);
 	snprintf(buf3, sizeof(buf), "Nivel: %d ", 1);
-	snprintf(buf4, sizeof(buf), "Pasajeros: %d ", 1);
+	snprintf(buf4, sizeof(buf), "Pasajeros: %d / 3", lboat->seatcount);
 
 	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
 	C2D_TextParse(&dynText_points, g_dynamicBuf, buf2);
@@ -338,9 +360,9 @@ static void drawer_scoreboard(float size)
 	C2D_TextOptimize(&dynText_levels);
 	C2D_TextOptimize(&dynText_passengers);
 
-	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor, 16.0f, 150.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
@@ -392,7 +414,7 @@ int main(int argc, char *argv[])
 		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysHeld();
 
-		/* Interface Control Logic */
+		/* Control Interface Logic */
 		// break in order to return to hbmenu
 		if (kDown & KEY_START)
 			break;
@@ -408,7 +430,8 @@ int main(int argc, char *argv[])
 
 		// Collision Detectors
 		collisionShark_Castaway();
-		collisionShark_lifeboat();
+		collisionShark_Lifeboat();
+		collisionCastaway_Lifeboat();
 
 		/* Start Render the scene */
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);

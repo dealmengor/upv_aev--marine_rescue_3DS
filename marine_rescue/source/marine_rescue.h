@@ -20,9 +20,15 @@
 
 // Game Configuratation Variables
 #define MAX_SHARKS 2
-#define MAX_CASTAWAY 2
-#define BOAT_LIFES 3
+#define MAX_CASTAWAY 6
 #define NEXT_LEVEL 100
+
+// Boat Variables
+#define BOAT_LIFES 3
+#define BOAT_SPEED 3
+#define BOAT_SEAT_COUNT 0
+
+//Dynamic Text
 #define BUFFER_SIZE 160
 #define STATIC_TEXT_COUNT 1
 #define FONT_SIZE 0.5f
@@ -40,6 +46,7 @@ typedef struct
     C2D_Sprite spr;
     float dx, dy; // System Reference
     bool alive;
+    bool picked_up;
 
 } Castaway;
 
@@ -59,6 +66,7 @@ typedef struct
     int lifes;
     int fuel;
     bool alive;
+    int seatcount;
 
 } Lifeboat;
 
