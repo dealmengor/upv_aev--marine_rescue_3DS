@@ -1,7 +1,6 @@
 // Main Header File
 
 /* Includes */
-
 #include <citro2d.h>
 #include <assert.h>
 #include <string.h>
@@ -38,7 +37,7 @@
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
+    float dx, dy; // velocity
     bool alive;
 
 } Castaway;
@@ -47,14 +46,15 @@ typedef struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
-} CoastGuard;
+    float dx, dy; // velocity only on the horizontal x-axis
+    float speed;
+} CoastGuardShip;
 
 // Lifeboat sprite struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
+    float dx, dy; // velocity
     int speed;
     int lifes;
     int fuel;
@@ -66,12 +66,12 @@ typedef struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
+    float dx, dy; // velocity
 } Sea;
 
 // Shark sprite struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // System Reference
+    float dx, dy; // velocity
 } Shark;

@@ -20,14 +20,16 @@ int castawaysaved;
 /*Structures & Data Structures Declaratation*/
 static Castaway castaways[MAX_CASTAWAY];
 static Shark sharks[MAX_SHARKS];
+static Sea sea;
 static Lifeboat lifeboat;
 Lifeboat *lboat = &lifeboat;
-static Sea sea;
+static CoastGuardShip coastguardship;
+CoastGuardShip *cgship = &coastguardship;
 
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
+static C2D_SpriteSheet coastguard_spriteSheet;
 static C2D_SpriteSheet sharks_spriteSheet;
-static C2D_SpriteSheet lifeboat_spriteSheet;
 static C2D_SpriteSheet sea_spriteSheet;
 
 /* C2D_Text Declaration Variables */
@@ -40,11 +42,11 @@ static void init_sprites()
 	castaways_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/castaways.t3x");
 	if (!castaways_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
+	coastguard_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/coastguard.t3x");
+	if (!sea_spriteSheet)
+		svcBreak(USERBREAK_PANIC);
 	sharks_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sharks.t3x");
 	if (!sharks_spriteSheet)
-		svcBreak(USERBREAK_PANIC);
-	lifeboat_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/lifeboat.t3x");
-	if (!lifeboat_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 	sea_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sea.t3x");
 	if (!sea_spriteSheet)
@@ -94,9 +96,8 @@ static void init_sharks()
 
 static void init_lifeboat()
 {
-
 	// Position, rotation and SPEED
-	C2D_SpriteFromSheet(&lboat->spr, lifeboat_spriteSheet, 0);
+	C2D_SpriteFromSheet(&lboat->spr, coastguard_spriteSheet, 0);
 	C2D_SpriteSetCenter(&lboat->spr, 0.5f, 0.5f);
 	C2D_SpriteSetPos(&lboat->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
 	C2D_SpriteSetRotationDegrees(&lboat->spr, 0);
@@ -109,6 +110,18 @@ static void init_lifeboat()
 		GAME_START = true;
 		lboat->lifes = BOAT_LIFES;
 	}
+}
+
+static void init_coastguardship()
+{
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&cgship->spr, coastguard_spriteSheet, 8);
+	C2D_SpriteSetCenter(&cgship->spr, 0.5f, 0.5f);
+	C2D_SpriteSetPos(&cgship->spr, TOP_SCREEN_WIDTH + 100, TOP_SCREEN_HEIGHT - 30);
+	C2D_SpriteSetRotationDegrees(&cgship->spr, 0);
+	cgship->speed = 1;
+	cgship->dx = cgship->speed;
+	cgship->dy = 0;
 }
 
 /* Motion Functions */
@@ -150,6 +163,24 @@ static void moveSprites_sharks()
 		if ((sprite->spr.params.pos.y < sprite->spr.params.pos.h / 2.0f && sprite->dy < 0.0f) ||
 			(sprite->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (sprite->spr.params.pos.h / 2.0f)) && sprite->dy > 0.0f))
 			sprite->dy = -sprite->dy;
+	}
+}
+
+static void moveSprite_coastguardship()
+{
+	C2D_SpriteMove(&cgship->spr, cgship->dx, cgship->dy);
+	//Check for collision with the screen boundaries
+
+	// Left Boundarie
+	if (cgship->spr.params.pos.x < cgship->spr.params.pos.w - 300 && cgship->dx < 0.0f)
+	{
+		cgship->dx = -cgship->dx;
+		cgship->spr.params.pos.x = TOP_SCREEN_WIDTH + 100;
+	}
+	// Right Boundarie
+	else if (cgship->spr.params.pos.x > (TOP_SCREEN_WIDTH - (cgship->spr.params.pos.w / 2.0f)) && cgship->dx > 0.0f)
+	{
+		cgship->dx = -cgship->dx;
 	}
 }
 
@@ -291,11 +322,15 @@ static void drawer_sharks()
 
 static void drawer_lifeboat()
 {
-
 	if ((lboat->alive == true))
 	{
 		C2D_DrawSprite(&lifeboat.spr);
 	}
+}
+
+static void drawer_coastguardship()
+{
+	C2D_DrawSprite(&coastguardship.spr);
 }
 
 static void sceneInit_bottom(void)
@@ -324,9 +359,9 @@ static void drawer_scoreboard(float size)
 	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE];
 	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers;
 	snprintf(buf, sizeof(buf), "Vidas: %d ", lboat->lifes);
-	snprintf(buf2, sizeof(buf), "Puntos: %d ", 0);
-	snprintf(buf3, sizeof(buf), "Nivel: %d ", 1);
-	snprintf(buf4, sizeof(buf), "Pasajeros: %d ", 1);
+	snprintf(buf2, sizeof(buf2), "Puntos: %d ", 0);
+	snprintf(buf3, sizeof(buf3), "Nivel: %d ", 1);
+	snprintf(buf4, sizeof(buf4), "Pasajeros: %d ", 1);
 
 	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
 	C2D_TextParse(&dynText_points, g_dynamicBuf, buf2);
@@ -342,6 +377,26 @@ static void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
+
+	//TESTING
+	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE], testbuf4[BUFFER_SIZE];
+	C2D_Text posx, posy, dx, dy;
+	snprintf(testbuf, sizeof(testbuf), "cgship.X: %f ", cgship->spr.params.pos.x);
+	snprintf(testbuf2, sizeof(testbuf2), "cgship.Y %f ", cgship->spr.params.pos.y);
+	snprintf(testbuf3, sizeof(testbuf3), "cgship.DX %f ", cgship->dx);
+	snprintf(testbuf4, sizeof(testbuf4), "cgship.DY %f ", cgship->dy);
+	C2D_TextParse(&posx, g_dynamicBuf, testbuf);
+	C2D_TextParse(&posy, g_dynamicBuf, testbuf2);
+	C2D_TextParse(&dx, g_dynamicBuf, testbuf3);
+	C2D_TextParse(&dy, g_dynamicBuf, testbuf4);
+	C2D_TextOptimize(&posx);
+	C2D_TextOptimize(&posy);
+	C2D_TextOptimize(&dx);
+	C2D_TextOptimize(&dy);
+	C2D_DrawText(&posx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&posy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
 static void scenesExit(void)
@@ -353,7 +408,7 @@ static void scenesExit(void)
 	// Delete graphics
 	C2D_SpriteSheetFree(castaways_spriteSheet);
 	C2D_SpriteSheetFree(sharks_spriteSheet);
-	C2D_SpriteSheetFree(lifeboat_spriteSheet);
+	C2D_SpriteSheetFree(coastguard_spriteSheet);
 	C2D_SpriteSheetFree(sea_spriteSheet);
 }
 
@@ -379,6 +434,7 @@ int main(int argc, char *argv[])
 	init_castaways();
 	init_sharks();
 	init_lifeboat();
+	init_coastguardship();
 
 	// Initialize the scene for Scoreboard
 	sceneInit_bottom();
@@ -405,6 +461,7 @@ int main(int argc, char *argv[])
 		moveSprites_castaways();
 		moveSprites_sharks();
 		moveLifeboat_sprite();
+		moveSprite_coastguardship();
 
 		// Collision Detectors
 		collisionShark_Castaway();
@@ -422,6 +479,7 @@ int main(int argc, char *argv[])
 		drawer_castaways();
 		drawer_sharks();
 		drawer_lifeboat();
+		drawer_coastguardship();
 
 		C2D_Flush(); // Ensures all 2D objects so far have been drawn.
 
