@@ -29,6 +29,7 @@ typedef struct
 {
     C2D_Sprite spr;
     float dx, dy; // System Reference
+    bool alive;
 } Castaway;
 
 // CoastGuard sprite struct

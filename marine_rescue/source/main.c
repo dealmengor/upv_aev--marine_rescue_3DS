@@ -30,6 +30,7 @@ static void init_sprites()
 	if (!sea_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 }
+
 static void init_sea()
 {
 	Sea *sprite = &sea;
@@ -52,6 +53,7 @@ static void init_castaways()
 		C2D_SpriteSetRotation(&sprite->spr, C3D_Angle(rand() / (float)RAND_MAX));
 		sprite->dx = rand() * 4.0f / RAND_MAX - 2.0f;
 		sprite->dy = rand() * 4.0f / RAND_MAX - 2.0f;
+		sprite->alive = true;
 	}
 }
 
@@ -89,8 +91,11 @@ static void moveSprites_castaways()
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
 	{
 		Castaway *sprite = &castaways[i];
-		C2D_SpriteMove(&sprite->spr, sprite->dx, sprite->dy);
-		C2D_SpriteRotateDegrees(&sprite->spr, 1.0f);
+		if ((sprite->alive == true))
+		{
+			C2D_SpriteMove(&sprite->spr, sprite->dx, sprite->dy);
+			C2D_SpriteRotateDegrees(&sprite->spr, 1.0f);
+		}
 
 		// Check for collision with the screen boundaries
 		if ((sprite->spr.params.pos.x < sprite->spr.params.pos.w / 2.0f && sprite->dx < 0.0f) ||
@@ -181,6 +186,23 @@ static void moveLifeboatController(u32 kHeld)
 	}
 }
 
+/* Collisions Functions */
+static void collisionShark_Castaway()
+{
+	for (size_t i = 0; i < MAX_SHARKS; i++)
+	{
+		Shark *shark = &sharks[i];
+		Castaway *castaway = &castaways[i];
+
+		if (abs(shark->spr.params.pos.x - castaways[i].spr.params.pos.x) < 20.0f &&
+			abs(shark->spr.params.pos.y - castaways[i].spr.params.pos.y) < 20.0f)
+		{
+			castaway->alive = false;
+			// C2D_SpriteSetPos(&castaway->spr, TOP_SCREEN_WIDTH / 2, -500.0f);
+		}
+	}
+}
+
 /* Drawers Functions */
 static void drawer_sea()
 {
@@ -190,7 +212,13 @@ static void drawer_sea()
 static void drawer_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
-		C2D_DrawSprite(&castaways[i].spr);
+	{
+		Castaway *sprite = &castaways[i];
+		if ((sprite->alive == true))
+		{
+			C2D_DrawSprite(&castaways[i].spr);
+		}
+	}
 }
 
 static void drawer_sharks()
@@ -206,7 +234,6 @@ static void drawer_lifeboat()
 
 int main(int argc, char *argv[])
 {
-
 	// Init libs
 	romfsInit();
 	gfxInitDefault();
@@ -250,6 +277,9 @@ int main(int argc, char *argv[])
 		moveSprites_castaways();
 		moveSprites_sharks();
 		moveLifeboat_sprite();
+
+		// Collision Detectors
+		collisionShark_Castaway();
 
 		// Start render the scene
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
