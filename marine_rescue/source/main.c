@@ -400,26 +400,6 @@ static void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
-
-	//TESTING
-	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE], testbuf4[BUFFER_SIZE];
-	C2D_Text posx, posy, dx, dy;
-	snprintf(testbuf, sizeof(testbuf), "cgship.X: %f ", cgship->spr.params.pos.x);
-	snprintf(testbuf2, sizeof(testbuf2), "cgship.Y %f ", cgship->spr.params.pos.y);
-	snprintf(testbuf3, sizeof(testbuf3), "cgship.DX %f ", cgship->dx);
-	snprintf(testbuf4, sizeof(testbuf4), "cgship.DY %f ", cgship->dy);
-	C2D_TextParse(&posx, g_dynamicBuf, testbuf);
-	C2D_TextParse(&posy, g_dynamicBuf, testbuf2);
-	C2D_TextParse(&dx, g_dynamicBuf, testbuf3);
-	C2D_TextParse(&dy, g_dynamicBuf, testbuf4);
-	C2D_TextOptimize(&posx);
-	C2D_TextOptimize(&posy);
-	C2D_TextOptimize(&dx);
-	C2D_TextOptimize(&dy);
-	C2D_DrawText(&posx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&posy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 190.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
 static void scenesExit(void)
