@@ -18,10 +18,19 @@
 #define BOTTOM_SCREEN_WIDTH 320
 #define BOTTOM_SCREEN_HEIGHT 240
 
-// Game Variables
+// Game Configuratation Variables
 #define MAX_SHARKS 2
 #define MAX_CASTAWAY 2
 #define BOAT_LIFES 3
+#define NEXT_LEVEL 100
+#define BUFFER_SIZE 160
+#define STATIC_TEXT_COUNT 1
+#define FONT_SIZE 0.5f
+
+//Colors
+#define WHITE C2D_Color32(0xFF, 0xFF, 0xFF, 0xFF)
+#define BLACK C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f)
+#define CYAN C2D_Color32(0x68, 0xB0, 0xD8, 0xFF)
 
 /* Structures */
 
