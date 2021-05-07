@@ -556,46 +556,6 @@ void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
-
-	//TEST BOAT
-	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE], testbuf4[BUFFER_SIZE];
-	C2D_Text posx, posy, dx, dy;
-	snprintf(testbuf, sizeof(testbuf), "lboat.X: %f ", lboat->spr.params.pos.x);
-	snprintf(testbuf2, sizeof(testbuf2), "lboat.Y %f ", lboat->spr.params.pos.y);
-	snprintf(testbuf3, sizeof(testbuf3), "lboat.DX %f ", lboat->dx);
-	snprintf(testbuf4, sizeof(testbuf3), "lboat.DY %f ", lboat->dy);
-	C2D_TextParse(&posx, g_dynamicBuf, testbuf);
-	C2D_TextParse(&posy, g_dynamicBuf, testbuf2);
-	C2D_TextParse(&dx, g_dynamicBuf, testbuf3);
-	C2D_TextParse(&dy, g_dynamicBuf, testbuf4);
-	C2D_TextOptimize(&posx);
-	C2D_TextOptimize(&posy);
-	C2D_TextOptimize(&dx);
-	C2D_TextOptimize(&dy);
-	C2D_DrawText(&posx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&posy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 190.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 210.0f, 0.5f, size, size, WHITE);
-
-	//TEST SHIP
-	char testbuf5[BUFFER_SIZE], testbuf6[BUFFER_SIZE], testbuf7[BUFFER_SIZE], testbuf8[BUFFER_SIZE];
-	C2D_Text posx1, posy1, dx1, dy1;
-	snprintf(testbuf5, sizeof(testbuf5), "cgship.X: %f ", cgship->spr.params.pos.x);
-	snprintf(testbuf6, sizeof(testbuf6), "cgship.Y %f ", cgship->spr.params.pos.y);
-	snprintf(testbuf7, sizeof(testbuf7), "cgship.DX %f ", cgship->dx);
-	snprintf(testbuf8, sizeof(testbuf8), "cgship.DY %f ", cgship->dy);
-	C2D_TextParse(&posx1, g_dynamicBuf, testbuf5);
-	C2D_TextParse(&posy1, g_dynamicBuf, testbuf6);
-	C2D_TextParse(&dx1, g_dynamicBuf, testbuf7);
-	C2D_TextParse(&dy1, g_dynamicBuf, testbuf8);
-	C2D_TextOptimize(&posx1);
-	C2D_TextOptimize(&posy1);
-	C2D_TextOptimize(&dx1);
-	C2D_TextOptimize(&dy1);
-	C2D_DrawText(&posx1, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 70.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&posy1, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 90.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dx1, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 110.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dy1, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 130.0f, 0.5f, size, size, WHITE);
 }
 
 /* System Functions */
@@ -633,8 +593,8 @@ void timeController(int time_sentinel)
 	if (time_sentinel == INITIAL_TIME_STATE)
 	{
 		initial_second = time(&current_epoch_time);
-		next_spawn = current_epoch_time + CASTAWAY_SPAWN;			   // Add 10 seconds to the next spawn
-		next_fuel_consumption = current_epoch_time + FUEL_CONSUMPTION; // Add 2 seconds to the next fuel consumption
+		next_spawn = current_epoch_time + CASTAWAY_SPAWN;					// Add 10 seconds to the next spawn
+		next_fuel_consumption = current_epoch_time + BOAT_FUEL_CONSUMPTION; // Add 2 seconds to the next fuel consumption
 	}
 	else
 	{
@@ -725,8 +685,8 @@ int main(int argc, char *argv[])
 			}
 			if (diff_t[1] == 0 && lboat->fuel > 0)
 			{
-				lboat->fuel -= FUEL_CONSUMPTION;
-				next_fuel_consumption = current_epoch_time + FUEL_CONSUMPTION;
+				lboat->fuel -= BOAT_FUEL_CONSUMPTION;
+				next_fuel_consumption = current_epoch_time + BOAT_FUEL_CONSUMPTION;
 			}
 
 			/* Control Interface Logic */
