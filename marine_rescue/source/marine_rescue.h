@@ -32,7 +32,9 @@
 #define BOAT_LIFES 3
 #define BOAT_SPEED 2
 #define BOAT_SEAT_COUNT 0
-#define FUEL_RECHARGE 60
+#define BOAT_FUEL_RECHARGE 60
+#define BOAT_TOP_SCREEN_WIDTH 392
+#define BOAT_TOP_SCREEN_HEIGHT 220
 
 // Sharpedos Variables
 #define MAX_SHARPEDOS 10
@@ -145,7 +147,7 @@ void collisionsharpedo_Castaway();
 void collisionsharpedo_Lifeboat();
 void collisionCastaway_Lifeboat();
 void collisionCoastGuardShip_Lifeboat();
-oid collisionCastaway_Coastguardship();
+void collisionCastaway_Coastguardship();
 void collisionSharpedo_Coastguardship();
 
 /* Drawer Functions */
