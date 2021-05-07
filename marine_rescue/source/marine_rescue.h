@@ -28,20 +28,21 @@
 
 // Castaways Variables
 #define MAX_CASTAWAYS 10
-#define CASTAWAY_SPAWN 10
+#define MAX_CASTAWAYS_SPEED 1
+#define CASTAWAY_SPAWN 5
 
 // LifeBoat Variables
 #define BOAT_LIFES 3
 #define BOAT_SPEED 2
 #define BOAT_SEAT_COUNT 0
-#define FUEL_RECHARGE 25
+#define FUEL_RECHARGE 15
 #define FUEL_CONSUMPTION 1
 
 // Sharpedos Variables
 #define MAX_SHARPEDOS 10
-#define MAX_SHARPEDOS_SPEED 1
+#define MAX_SHARPEDOS_SPEED 1.5f
 #define MAX_MEGA_SHARPEDOS_SPEED 2
-#define MEGA_SHARPEDO_SPAWN_LEVEL 5
+#define MEGA_SHARPEDO_SPAWN_LEVEL 4
 
 // Dynamic Text
 #define BUFFER_SIZE 160
@@ -76,16 +77,15 @@ typedef struct
 {
     C2D_Sprite spr;
     float dx, dy; // velocity
-    bool alive;
-    bool picked_up;
-
+    float speed;
+    bool visible;
 } Castaway;
 
 // CoastGuard sprite struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // velocity only on the horizontal x-axis
+    float dx, dy; // velocity
     float speed;
 } CoastGuardShip;
 
@@ -94,7 +94,7 @@ typedef struct
 {
     C2D_Sprite spr;
     float dx, dy; // velocity
-    int speed;
+    float speed;
     int lifes;
     int fuel;
     bool alive;
@@ -115,7 +115,7 @@ typedef struct
     int id;
     C2D_Sprite spr;
     float dx, dy; // velocity
-    int speed;
+    float speed;
     bool stalking;
 } Sharpedo;
 
