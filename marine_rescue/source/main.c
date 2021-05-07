@@ -194,13 +194,13 @@ void moveSprite_coastguardship()
 	C2D_SpriteMove(&cgship->spr, cgship->dx, cgship->dy);
 	//Check for collision with the screen boundaries
 
-	// Left Boundarie
+	// Left Boundary
 	if (cgship->spr.params.pos.x < cgship->spr.params.pos.w - 300 && cgship->dx < 0.0f)
 	{
 		cgship->dx = -cgship->dx;
 		cgship->spr.params.pos.x = TOP_SCREEN_WIDTH + 100;
 	}
-	// Right Boundarie
+	// Right Boundary
 	else if (cgship->spr.params.pos.x > (TOP_SCREEN_WIDTH - (cgship->spr.params.pos.w / 2.0f)) && cgship->dx > 0.0f)
 	{
 		cgship->dx = -cgship->dx;
