@@ -131,7 +131,7 @@ void init_lifeboat(int lifes)
 	lboat->speed = BOAT_SPEED;
 	lboat->alive = true;
 	lboat->seatcount = BOAT_SEAT_COUNT;
-	lboat->fuel = FUEL_RECHARGE;
+	lboat->fuel = BOAT_FUEL_RECHARGE;
 	lboat->lifes = lifes;
 }
 
@@ -212,32 +212,38 @@ void moveSprite_Lifeboat()
 
 	if ((lboat->alive == true))
 	{
-		//LEFT BORDER
-		if (lboat->spr.params.pos.x < TOP_SCREEN_WIDTH && lboat->spr.params.pos.x > 0)
+		// Move sprite on X axis while is on the screen
+		if (lboat->spr.params.pos.x < BOAT_TOP_SCREEN_WIDTH && lboat->spr.params.pos.x >= 9)
 		{
 			C2D_SpriteMove(&lboat->spr, lboat->dx, 0);
 		}
-		//RIGHT BORDER
 		else
 		{
-			if (lboat->spr.params.pos.x >= TOP_SCREEN_WIDTH)
+			//RIGTH CORNER
+			if (lboat->spr.params.pos.x >= BOAT_TOP_SCREEN_WIDTH)
 				C2D_SpriteMove(&lboat->spr, -lboat->speed, 0);
+			//LEFT CORNER
 			else
 				C2D_SpriteMove(&lboat->spr, lboat->speed, 0);
 		}
 
-		if (lboat->spr.params.pos.y <= TOP_SCREEN_HEIGHT && lboat->spr.params.pos.y > 0)
+		// Move sprite on Y axis while is on the screen
+		if (lboat->spr.params.pos.y <= BOAT_TOP_SCREEN_HEIGHT && lboat->spr.params.pos.y >= 20)
 		{
 			C2D_SpriteMove(&lboat->spr, 0, lboat->dy);
 		}
 		else
 		{
-			if (lboat->spr.params.pos.y > TOP_SCREEN_HEIGHT)
+			//BOTTOM CORNER
+			if (lboat->spr.params.pos.y >= BOAT_TOP_SCREEN_HEIGHT)
 			{
 				C2D_SpriteMove(&lboat->spr, 0, -lboat->speed);
 			}
+			//UPPER CORNER
 			else
+			{
 				C2D_SpriteMove(&lboat->spr, 0, lboat->speed);
+			}
 		}
 		lboat->dx = 0;
 		lboat->dy = 0;
@@ -287,8 +293,7 @@ void bounceSharpedo_Coastguardship(Sharpedo *sharpedo)
 
 void bounceCoastGuardShip_Lifeboat()
 {
-	lboat->dx = -lboat->dx;
-	lboat->dy = -lboat->dy;
+	// lboat->speed = -lboat->speed;
 }
 
 /* Lifeboat Controllers */
@@ -423,11 +428,8 @@ void collisionCoastGuardShip_Lifeboat()
 		if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 50.0f &&
 			abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 50.0f)
 		{
-			// Bounce
-			bounceCoastGuardShip_Lifeboat();
-
 			//Lifeboat Fuel Recharge
-			lboat->fuel = FUEL_RECHARGE;
+			lboat->fuel = BOAT_FUEL_RECHARGE;
 
 			if (lboat->seatcount > 0)
 			{
@@ -444,6 +446,12 @@ void collisionCoastGuardShip_Lifeboat()
 				lboat->seatcount = 0;
 			}
 		}
+	}
+	// Bounce
+	if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 40.0f &&
+		abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 40.0f)
+	{
+		bounceCoastGuardShip_Lifeboat();
 	}
 }
 
@@ -706,7 +714,7 @@ int main(int argc, char *argv[])
 			// Collision Detectors
 			// collisionSharpedo_Sharpedo();
 			collisionSharpedo_Castaway();
-			collisionSharpedo_Lifeboat();
+			//collisionSharpedo_Lifeboat();
 			collisionSharpedo_Coastguardship();
 			collisionCastaway_Lifeboat();
 			collisionCoastGuardShip_Lifeboat();
