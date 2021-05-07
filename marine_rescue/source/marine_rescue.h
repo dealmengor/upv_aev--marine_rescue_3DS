@@ -19,7 +19,7 @@
 
 // Game Configuratation Variables
 #define MAX_SHARKS 1
-#define MAX_CASTAWAY 10
+#define MAX_CASTAWAY 1
 #define NEXT_LEVEL 100
 
 // Boat Variables

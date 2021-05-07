@@ -4,9 +4,9 @@
 
 /* Socoreboard Variables */
 bool GAME_START = false;
-int points;
-int level;
-int lb_speedometer;
+int points = START_POINTS;
+int level = START_LEVEL;
+int lb_speedometer = START_SPEEDOMETER;
 double diff_t = 0;
 
 /* Element Counters */
@@ -75,6 +75,7 @@ static void init_castaways()
 		castaway->dy = rand() * 4.0f / RAND_MAX - 2.0f;
 		castaway->alive = true;
 		castaway->picked_up = false;
+		castawaycount += 1;
 	}
 }
 
@@ -101,11 +102,12 @@ static void init_lifeboat()
 	C2D_SpriteSetCenter(&lboat->spr, 0.5f, 0.5f);
 	C2D_SpriteSetPos(&lboat->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
 	C2D_SpriteSetRotationDegrees(&lboat->spr, 0);
-	lboat->dx = rand() * 4.0f / RAND_MAX - 2.0f;
-	lboat->dy = rand() * 4.0f / RAND_MAX - 2.0f;
+	lboat->dx = 0;
+	lboat->dy = 0;
 	lboat->speed = BOAT_SPEED;
 	lboat->alive = true;
 	lboat->seatcount = BOAT_SEAT_COUNT;
+	lboat->fuel = 60;
 
 	if ((GAME_START == false))
 	{
@@ -258,7 +260,13 @@ static void bounceCastaway_Coastguardship(Castaway *castaway)
 	}
 }
 
-/* Life Controllers */
+static void bounceShark_Coastguardship(Shark *Shark)
+{
+	Shark->dx = -Shark->dx;
+	Shark->dy = -Shark->dy;
+}
+
+/* Lifeboat Controllers */
 static void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway)
 {
 	if ((lboat->seatcount < 3) && (castaway->picked_up == false) && (lboat->alive = true))
@@ -303,22 +311,22 @@ static void spawnNewCastaway()
 }
 
 /* Collision Functions */
-static void collisionShark_Shark()
-{
-	for (size_t i = 0; i < MAX_SHARKS; i++)
-	{
-		Shark *shark = &sharks[i];
-		Shark *shark2 = &sharks[i];
+// static void collisionShark_Shark()
+// {
+// 	for (size_t i = 0; i < MAX_SHARKS; i++)
+// 	{
+// 		Shark *shark = &sharks[i];
+// 		Shark *shark2 = &sharks[i];
 
-		if (abs(shark->spr.params.pos.x - shark2[i].spr.params.pos.x) < 20.0f &&
-			abs(shark->spr.params.pos.y - shark2[i].spr.params.pos.y) < 20.0f)
-		// &&shark->id != shark2[i].id
-		{
-			shark->dx = -shark->dx;
-			shark->dy = -shark->dy;
-		}
-	}
-}
+// 		if (abs(shark->spr.params.pos.x - shark2[i].spr.params.pos.x) < 20.0f &&
+// 			abs(shark->spr.params.pos.y - shark2[i].spr.params.pos.y) < 20.0f)
+// 		// &&shark->id != shark2[i].id
+// 		{
+// 			shark->dx = -shark->dx;
+// 			shark->dy = -shark->dy;
+// 		}
+// 	}
+// }
 
 static void collisionShark_Castaway()
 {
@@ -362,6 +370,27 @@ static void collisionCastaway_Lifeboat()
 	}
 }
 
+static void collisionCoastGuardShip_Lifeboat()
+{
+	if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
+		abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
+	{
+		//Lifeboat Fuel Recharge
+		lboat->fuel = FUEL_RECHARGE;
+
+		//Increase Points
+		if (lboat->seatcount > 0)
+		{
+			for (size_t i = 0; i < lboat->seatcount; i++)
+			{
+				points += 10;
+				castawaysaved += 1;
+			}
+			lboat->seatcount = 0;
+		}
+	}
+}
+
 static void collisionCastaway_Coastguardship()
 {
 	for (size_t i = 0; i < MAX_CASTAWAY; i++)
@@ -371,6 +400,19 @@ static void collisionCastaway_Coastguardship()
 			abs(castaway->spr.params.pos.y - cgship->spr.params.pos.y) < 30.0f)
 		{
 			bounceCastaway_Coastguardship(castaway);
+		}
+	}
+}
+
+static void collisionShark_Coastguardship()
+{
+	for (size_t i = 0; i < MAX_SHARKS; i++)
+	{
+		Shark *shark = &sharks[i];
+		if (abs(shark->spr.params.pos.x - cgship->spr.params.pos.x) < 40.0f &&
+			abs(shark->spr.params.pos.y - cgship->spr.params.pos.y) < 30.0f)
+		{
+			bounceShark_Coastguardship(shark);
 		}
 	}
 }
@@ -435,39 +477,32 @@ static void drawer_scoreboard(float size)
 	C2D_DrawText(&g_staticText[0], C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 150.0f, 25.0f, 0.5f, size, size, WHITE);
 
 	// Generate and draw dynamic text
-	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE];
-	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers;
+	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE], buf5[BUFFER_SIZE];
+	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers, dynText_fuel;
+
 	snprintf(buf, sizeof(buf), "Vidas: %d ", lboat->lifes);
-	snprintf(buf2, sizeof(buf), "Puntos: %d ", 0);
-	snprintf(buf3, sizeof(buf), "Nivel: %d ", 1);
-	snprintf(buf4, sizeof(buf), "Pasajeros: %d / 3", lboat->seatcount);
+	snprintf(buf2, sizeof(buf2), "Puntos: %d ", points);
+	snprintf(buf3, sizeof(buf3), "Nivel: %d ", level);
+	snprintf(buf4, sizeof(buf4), "Pasajeros: %d / 3", lboat->seatcount);
+	snprintf(buf5, sizeof(buf5), "Combustible: %d / 60", lboat->fuel);
 
 	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
 	C2D_TextParse(&dynText_points, g_dynamicBuf, buf2);
 	C2D_TextParse(&dynText_levels, g_dynamicBuf, buf3);
 	C2D_TextParse(&dynText_passengers, g_dynamicBuf, buf4);
+	C2D_TextParse(&dynText_fuel, g_dynamicBuf, buf5);
 
 	C2D_TextOptimize(&dynText_lifes);
 	C2D_TextOptimize(&dynText_points);
 	C2D_TextOptimize(&dynText_levels);
 	C2D_TextOptimize(&dynText_passengers);
+	C2D_TextOptimize(&dynText_fuel);
 
-	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor, 16.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
-
-	//TEST
-	char testbuf2[BUFFER_SIZE];
-	C2D_Text posx, posy, dx;
-	snprintf(testbuf2, sizeof(testbuf2), "Shark Name: %d ", lboat->seatcount);
-	C2D_TextParse(&posy, g_dynamicBuf, testbuf2);
-	C2D_TextOptimize(&posx);
-	C2D_TextOptimize(&posy);
-	C2D_TextOptimize(&dx);
-	C2D_DrawText(&posx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&posy, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dx, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 250.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor, 16.0f, 130.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
 static void scenesExit(void)
@@ -553,7 +588,9 @@ int main(int argc, char *argv[])
 		// collisionShark_Shark();
 		collisionShark_Castaway();
 		collisionShark_Lifeboat();
+		collisionShark_Coastguardship();
 		collisionCastaway_Lifeboat();
+		collisionCoastGuardShip_Lifeboat();
 		collisionCastaway_Coastguardship();
 
 		/* Start Render the scene */
