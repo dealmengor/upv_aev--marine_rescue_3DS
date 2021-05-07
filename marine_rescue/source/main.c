@@ -3,11 +3,16 @@
 /* Globals */
 
 /* Socoreboard Variables */
-int GAME_STATUS = START_GAMESTATE;
+int game_status = START_GAMESTATE;
 int points = START_POINTS;
 int level = START_LEVEL;
 int lb_speedometer = START_SPEEDOMETER;
-double diff_t = 0;
+
+/* Time Variables */
+time_t current_epoch_time, initial_second, game_time, next_spawn, next_fuel_consumption;
+double diff_t[TIME_DIFFERENCE_QUANTITY];
+struct tm ts;					 //Time Structure
+char time_buf[TIME_BUFFER_SIZE]; //Buffer Convert from epoch to human-readable date
 
 /* Element Counters */
 int castawaycount = 0;
@@ -126,7 +131,7 @@ void init_lifeboat(int lifes)
 	lboat->speed = BOAT_SPEED;
 	lboat->alive = true;
 	lboat->seatcount = BOAT_SEAT_COUNT;
-	lboat->fuel = 60;
+	lboat->fuel = FUEL_RECHARGE;
 	lboat->lifes = lifes;
 }
 
@@ -202,7 +207,7 @@ void moveSprite_coastguardship()
 	}
 }
 
-void moveLifeboat_sprite()
+void moveSprite_Lifeboat()
 {
 
 	if ((lboat->alive == true))
@@ -408,14 +413,15 @@ void collisionCastaway_Lifeboat()
 		}
 	}
 }
+
 void collisionCoastGuardShip_Lifeboat()
 {
 	// Lifeboat current status Check
-	if (lboat->alive == true && lboat->seatcount > 0)
+	if (lboat->alive == true)
 	{
 		// Collision Check
-		if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 40.0f &&
-			abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 40.0f)
+		if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 50.0f &&
+			abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 50.0f)
 		{
 			// Bounce
 			bounceCoastGuardShip_Lifeboat();
@@ -423,17 +429,20 @@ void collisionCoastGuardShip_Lifeboat()
 			//Lifeboat Fuel Recharge
 			lboat->fuel = FUEL_RECHARGE;
 
-			//Increase Points
-			for (size_t i = 0; i < lboat->seatcount; i++)
+			if (lboat->seatcount > 0)
 			{
-				points += RESCUE_POINTS;
-				castawaysaved += 1;
-				if (points % NEXT_LEVEL == 0)
+				//Increase Points
+				for (size_t i = 0; i < lboat->seatcount; i++)
 				{
-					gameStatusController(LEVEL_UP_GAMESTATE); //LEVEL UP!
+					points += RESCUE_POINTS;
+					castawaysaved += 1;
+					if (points % NEXT_LEVEL == 0)
+					{
+						gameStatusController(LEVEL_UP_GAMESTATE); //LEVEL UP!
+					}
 				}
+				lboat->seatcount = 0;
 			}
-			lboat->seatcount = 0;
 		}
 	}
 }
@@ -510,32 +519,36 @@ void drawer_scoreboard(float size)
 	C2D_DrawText(&g_staticText[0], C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 150.0f, 25.0f, 0.5f, size, size, WHITE);
 
 	// Generate and draw dynamic text
-	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE], buf5[BUFFER_SIZE];
-	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers, dynText_fuel;
+	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE], buf5[BUFFER_SIZE], buf6[BUFFER_SIZE];
+	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers, dynText_fuel, dynText_time;
 
 	snprintf(buf, sizeof(buf), "Vidas: %d ", lboat->lifes);
 	snprintf(buf2, sizeof(buf2), "Puntos: %d ", points);
 	snprintf(buf3, sizeof(buf3), "Nivel: %d ", level);
 	snprintf(buf4, sizeof(buf4), "Pasajeros: %d / 3", lboat->seatcount);
-	snprintf(buf5, sizeof(buf5), "Combustible: %d / 60", lboat->fuel);
+	snprintf(buf5, sizeof(buf5), "Combustible: %d / 25", lboat->fuel);
+	snprintf(buf6, sizeof(buf6), "Tiempo: %s ", time_buf);
 
 	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
 	C2D_TextParse(&dynText_points, g_dynamicBuf, buf2);
 	C2D_TextParse(&dynText_levels, g_dynamicBuf, buf3);
 	C2D_TextParse(&dynText_passengers, g_dynamicBuf, buf4);
 	C2D_TextParse(&dynText_fuel, g_dynamicBuf, buf5);
+	C2D_TextParse(&dynText_time, g_dynamicBuf, buf6);
 
 	C2D_TextOptimize(&dynText_lifes);
 	C2D_TextOptimize(&dynText_points);
 	C2D_TextOptimize(&dynText_levels);
 	C2D_TextOptimize(&dynText_passengers);
 	C2D_TextOptimize(&dynText_fuel);
+	C2D_TextOptimize(&dynText_time);
 
-	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor, 16.0f, 130.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor, 16.0f, 110.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 130.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
 /* System Functions */
@@ -566,13 +579,37 @@ void scenesExit()
 	C2D_SpriteSheetFree(sea_spriteSheet);
 }
 
-/* Game Controller */
-void gameStatusController(int sentinel)
+void timeController(int time_sentinel)
 {
-	switch (sentinel)
+	// Initialize the time variables
+	time(&current_epoch_time); // Get current EPOCH time from System
+	if (time_sentinel == INITIAL_TIME_STATE)
+	{
+		initial_second = time(&current_epoch_time);
+		next_spawn = current_epoch_time + 10;			// Add 10 seconds to the next spawn
+		next_fuel_consumption = current_epoch_time + 1; // Add 2 seconds to the next fuel consumption
+	}
+	else
+	{
+		diff_t[0] = difftime(next_spawn, current_epoch_time);			 // Time Difference between current time and next_spawn
+		diff_t[1] = difftime(next_fuel_consumption, current_epoch_time); // Time Difference between current time and next_fuel_consumption
+
+		// Calculate elapsed time
+		game_time = current_epoch_time - initial_second;
+
+		// Format time, "hh:mm:ss"
+		ts = *localtime(&game_time);
+		strftime(time_buf, sizeof(time_buf), "%H:%M:%S", &ts);
+	}
+}
+
+/* Game Controller */
+void gameStatusController(int game_sentinel)
+{
+	switch (game_sentinel)
 	{
 	case GAMEOVER_GAMESTATE: //Lose Game
-		GAME_STATUS = GAMEOVER_GAMESTATE;
+		game_status = GAMEOVER_GAMESTATE;
 		break;
 	case START_GAMESTATE: //Start Game
 		//TODO
@@ -580,7 +617,7 @@ void gameStatusController(int sentinel)
 	case LEVEL_UP_GAMESTATE: //Level Up
 		level += 1;
 		spawnNewSharpedo();
-		GAME_STATUS = LEVEL_UP_GAMESTATE;
+		game_status = LEVEL_UP_GAMESTATE;
 		break;
 	case NEW_GAMESTATE: //New Game
 		//TODO
@@ -601,11 +638,8 @@ int main(int argc, char *argv[])
 	C2D_Prepare();
 	srand(time(NULL)); // Sets a seed for random numbers
 
-	// Timer
-	time_t current_epoch_time, next_spawn;
-	time(&current_epoch_time);
-	next_spawn = current_epoch_time + 10;
-	diff_t = difftime(next_spawn, current_epoch_time);
+	// Init Timer
+	timeController(INITIAL_TIME_STATE);
 
 	// Create screens
 	C3D_RenderTarget *top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
@@ -627,28 +661,34 @@ int main(int argc, char *argv[])
 	// Main loop
 	while (aptMainLoop())
 	{
-		if (GAME_STATUS == GAMEOVER_GAMESTATE)
+		if (game_status == GAMEOVER_GAMESTATE)
 		{
 			getchar(); // Pause program
 		}
 		else
 		{
+			/* Time Controller */
+			timeController(TIME_CONTINUITY);
+
+			// Time mechanics
+			if (diff_t[0] == 0)
+			{
+				next_spawn = current_epoch_time + 10;
+				spawnNewCastaway();
+			}
+			if (diff_t[1] == 0 && lboat->fuel > 0)
+			{
+				next_fuel_consumption = current_epoch_time + 1;
+				lboat->fuel -= 1;
+			}
+
+			/* Control Interface Logic */
 			hidScanInput();
 
 			// Respond to user input
 			u32 kDown = hidKeysDown();
 			u32 kHeld = hidKeysHeld();
 
-			//Timer
-			time(&current_epoch_time);						   // Get current EPOCH time from System
-			diff_t = difftime(next_spawn, current_epoch_time); // Time Difference
-			if (diff_t == 0)
-			{
-				next_spawn = current_epoch_time + 10;
-				spawnNewCastaway();
-			}
-
-			/* Control Interface Logic */
 			// break in order to return to hbmenu
 			if (kDown & KEY_START)
 				break;
@@ -660,7 +700,7 @@ int main(int argc, char *argv[])
 			// Move sprites
 			moveSprites_castaways();
 			moveSprites_sharpedos();
-			moveLifeboat_sprite();
+			moveSprite_Lifeboat();
 			moveSprite_coastguardship();
 
 			// Collision Detectors

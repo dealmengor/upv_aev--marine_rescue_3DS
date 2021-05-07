@@ -20,19 +20,22 @@
 // Game Configuratation Variables
 #define START_POINTS 0
 #define START_SPEEDOMETER 0
-#define GAME_TIME 0
 #define START_LEVEL 1
 #define NEXT_LEVEL 100
 #define RESCUE_POINTS 10
+#define TIME_DIFFERENCE_QUANTITY 2
+#define TIME_BUFFER_SIZE 80
 
 // Castaways Variables
 #define MAX_CASTAWAYS 10
+#define CASTAWAY_SPAWN 10
 
 // LifeBoat Variables
 #define BOAT_LIFES 3
 #define BOAT_SPEED 2
 #define BOAT_SEAT_COUNT 0
-#define FUEL_RECHARGE 60
+#define FUEL_RECHARGE 25
+#define FUEL_CONSUMPTION 1
 
 // Sharpedos Variables
 #define MAX_SHARPEDOS 10
@@ -58,7 +61,13 @@ typedef enum
     LEVEL_UP_GAMESTATE, // 2
     NEW_GAMESTATE,      // 3
     WIN_GAMESTATE       // 4
-} game_state_t;
+} game_state;
+
+typedef enum
+{
+    INITIAL_TIME_STATE, // 0
+    TIME_CONTINUITY     // 1
+} time_state;
 
 /* Structures */
 
@@ -145,7 +154,7 @@ void collisionsharpedo_Castaway();
 void collisionsharpedo_Lifeboat();
 void collisionCastaway_Lifeboat();
 void collisionCoastGuardShip_Lifeboat();
-oid collisionCastaway_Coastguardship();
+void collisionCastaway_Coastguardship();
 void collisionSharpedo_Coastguardship();
 
 /* Drawer Functions */
