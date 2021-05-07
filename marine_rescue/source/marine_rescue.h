@@ -101,7 +101,6 @@ typedef struct
     int fuel;
     bool alive;
     int seatcount;
-
 } Lifeboat;
 
 // Sea sprite struct
@@ -128,7 +127,7 @@ void init_sprites();
 void init_sea();
 void init_castaways();
 void init_sharpedo();
-void init_lifeboat(int lifes);
+void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y);
 void init_coastguardship();
 
 /* Motion Functions */

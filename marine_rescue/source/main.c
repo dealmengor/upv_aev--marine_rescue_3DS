@@ -119,19 +119,19 @@ void init_sharpedo()
 	}
 }
 
-void init_lifeboat(int lifes)
+void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y)
 {
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&lboat->spr, coastguard_spriteSheet, 0);
 	C2D_SpriteSetCenter(&lboat->spr, 0.5f, 0.5f);
-	C2D_SpriteSetPos(&lboat->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
+	C2D_SpriteSetPos(&lboat->spr, pos_x, pos_y);
 	C2D_SpriteSetRotationDegrees(&lboat->spr, 0);
 	lboat->dx = 0;
 	lboat->dy = 0;
 	lboat->speed = BOAT_SPEED;
-	lboat->alive = true;
 	lboat->seatcount = BOAT_SEAT_COUNT;
 	lboat->fuel = BOAT_FUEL_RECHARGE;
+	lboat->alive = alive;
 	lboat->lifes = lifes;
 }
 
@@ -205,11 +205,16 @@ void moveSprite_coastguardship()
 	{
 		cgship->dx = -cgship->dx;
 	}
+
+	// Check if a new lifeboat is needed as long as the coast guard boat is in the visible sea.
+	if ((lboat->alive == false) && ((cgship->spr.params.pos.x / 2.0f <= TOP_SCREEN_WIDTH - cgship->spr.params.pos.x / 2.0f) && cgship->spr.params.pos.x / 2.0f >= 0.0f))
+	{
+		init_lifeboat(lboat->lifes, true, cgship->spr.params.pos.x, cgship->spr.params.pos.y - lboat->spr.params.pos.h);
+	}
 }
 
 void moveSprite_Lifeboat()
 {
-
 	if ((lboat->alive == true))
 	{
 		// Move sprite on X axis while is on the screen
@@ -252,7 +257,7 @@ void moveSprite_Lifeboat()
 
 void moveLifeboatController(u32 kHeld)
 {
-	if (lboat->fuel > 0)
+	if (lboat->alive == true && lboat->fuel > 0)
 	{
 		//UP
 		if (kHeld & KEY_UP)
@@ -310,14 +315,13 @@ void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway)
 
 void lifeboatDeath(Lifeboat *lboat)
 {
-	if (lboat->alive == true && lboat->lifes > 0)
+	if (lboat->lifes > 0)
 	{
 		lboat->lifes -= 1;
-		init_lifeboat(lboat->lifes);
+		lboat->alive = false;
 		// GAMEOVER
 		if (lboat->lifes == 0)
 		{
-			lboat->alive = false;
 			lboat->seatcount = BOAT_SEAT_COUNT;
 			gameStatusController(GAMEOVER_GAMESTATE);
 		}
@@ -393,7 +397,7 @@ void collisionSharpedo_Lifeboat()
 	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 	{
 		Sharpedo *sharpedo = &sharpedos[i];
-		if (sharpedo->stalking == false)
+		if ((sharpedo->stalking == false) && (lboat->alive == true))
 		{
 			if (abs(sharpedo->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
 				abs(sharpedo->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
@@ -409,7 +413,7 @@ void collisionCastaway_Lifeboat()
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
-		if (castaway->visible == true)
+		if ((castaway->visible == true) && (lboat->alive == true))
 		{
 			if (abs(castaway->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
 				abs(castaway->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
@@ -445,7 +449,7 @@ void collisionCoastGuardShip_Lifeboat()
 						gameStatusController(LEVEL_UP_GAMESTATE); //LEVEL UP!
 					}
 				}
-				lboat->seatcount = 0;
+				lboat->seatcount = BOAT_SEAT_COUNT;
 			}
 
 			// Bounce
@@ -508,7 +512,7 @@ void drawer_sharpedos()
 
 void drawer_lifeboat()
 {
-	if ((lboat->alive == true))
+	if (lboat->alive == true)
 		C2D_DrawSprite(&lifeboat.spr);
 }
 
@@ -556,6 +560,34 @@ void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
+
+	//TESTING
+	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE], testbuf4[BUFFER_SIZE], testbuf5[BUFFER_SIZE];
+	C2D_Text t, t2, t3, t4, t5;
+
+	snprintf(testbuf, sizeof(testbuf), "lboat.x: %f ", lboat->spr.params.pos.x);
+	snprintf(testbuf2, sizeof(testbuf2), "lboat.y: %f ", lboat->spr.params.pos.y);
+	snprintf(testbuf3, sizeof(testbuf3), "lboat.dx: %f ", lboat->dx);
+	snprintf(testbuf4, sizeof(testbuf4), "lboat.dy: %f ", lboat->dy);
+	snprintf(testbuf5, sizeof(testbuf5), "sharpedocount: %d ", sharpedocount);
+
+	C2D_TextParse(&t, g_dynamicBuf, testbuf);
+	C2D_TextParse(&t2, g_dynamicBuf, testbuf2);
+	C2D_TextParse(&t3, g_dynamicBuf, testbuf3);
+	C2D_TextParse(&t4, g_dynamicBuf, testbuf4);
+	C2D_TextParse(&t5, g_dynamicBuf, testbuf5);
+
+	C2D_TextOptimize(&t);
+	C2D_TextOptimize(&t2);
+	C2D_TextOptimize(&t3);
+	C2D_TextOptimize(&t4);
+	C2D_TextOptimize(&t5);
+
+	C2D_DrawText(&t, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 130.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t2, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t3, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t4, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t5, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
 /* System Functions */
@@ -659,8 +691,8 @@ int main(int argc, char *argv[])
 	init_sea();
 	init_castaways();
 	init_sharpedo();
-	init_lifeboat(BOAT_LIFES);
 	init_coastguardship();
+	init_lifeboat(BOAT_LIFES, false, 0, 0);
 
 	// Initialize the scene for Scoreboard
 	sceneInit_bottom();
@@ -713,7 +745,7 @@ int main(int argc, char *argv[])
 			// Collision Detectors
 			// collisionSharpedo_Sharpedo();
 			collisionSharpedo_Castaway();
-			//collisionSharpedo_Lifeboat();
+			collisionSharpedo_Lifeboat();
 			collisionSharpedo_Coastguardship();
 			collisionCastaway_Lifeboat();
 			collisionCoastGuardShip_Lifeboat();
