@@ -265,7 +265,7 @@ void moveLifeboatController(u32 kHeld)
 }
 
 /* Bounce Controllers */
-static void bounceCastaway_Coastguardship(Castaway *castaway)
+void bounceCastaway_Coastguardship(Castaway *castaway)
 {
 	if ((castaway->picked_up == false) && (castaway->alive = true))
 	{
@@ -274,13 +274,13 @@ static void bounceCastaway_Coastguardship(Castaway *castaway)
 	}
 }
 
-static void bounceSharpedo_Coastguardship(Sharpedo *sharpedo)
+void bounceSharpedo_Coastguardship(Sharpedo *sharpedo)
 {
 	sharpedo->dx = -sharpedo->dx;
 	sharpedo->dy = -sharpedo->dy;
 }
 
-static void bounceCoastGuardShip_Lifeboat()
+void bounceCoastGuardShip_Lifeboat()
 {
 	lboat->dx = -lboat->dx;
 	lboat->dy = -lboat->dy;
@@ -408,7 +408,6 @@ void collisionCastaway_Lifeboat()
 		}
 	}
 }
-
 void collisionCoastGuardShip_Lifeboat()
 {
 	// Lifeboat current status Check
@@ -439,7 +438,7 @@ void collisionCoastGuardShip_Lifeboat()
 	}
 }
 
-static void collisionCastaway_Coastguardship()
+void collisionCastaway_Coastguardship()
 {
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
@@ -452,7 +451,7 @@ static void collisionCastaway_Coastguardship()
 	}
 }
 
-static void collisionSharpedo_Coastguardship()
+void collisionSharpedo_Coastguardship()
 {
 	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 	{

@@ -127,6 +127,11 @@ void moveSprite_coastguardship();
 void moveLifeboat_sprite();
 void moveLifeboatController(u32 kHeld);
 
+/* Bounce Controllers */
+void bounceCastaway_Coastguardship(Castaway *castaway);
+void bounceSharpedo_Coastguardship(Sharpedo *sharpedo);
+void bounceCoastGuardShip_Lifeboat();
+
 /* Lifeboat Controllers */
 void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway);
 void lifeboatDeath(Lifeboat *lboat);
@@ -140,6 +145,8 @@ void collisionsharpedo_Castaway();
 void collisionsharpedo_Lifeboat();
 void collisionCastaway_Lifeboat();
 void collisionCoastGuardShip_Lifeboat();
+oid collisionCastaway_Coastguardship();
+void collisionSharpedo_Coastguardship();
 
 /* Drawer Functions */
 void drawer_sea();
