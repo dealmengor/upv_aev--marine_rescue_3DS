@@ -71,15 +71,15 @@ void init_castaways()
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[castawaycount];
-		// Random image, position, rotation and SPEED
+		// SPEED, Random image, position & rotation
 		C2D_SpriteFromSheet(&castaway->spr, castaways_spriteSheet, rand() % 2);
 		C2D_SpriteSetCenter(&castaway->spr, 0.5f, 0.5f);
 		C2D_SpriteSetPos(&castaway->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
 		C2D_SpriteSetRotation(&castaway->spr, C3D_Angle(rand() / (float)RAND_MAX));
-		castaway->dx = rand() * 4.0f / RAND_MAX - 2.0f;
-		castaway->dy = rand() * 4.0f / RAND_MAX - 2.0f;
-		castaway->alive = false;
-		castaway->picked_up = false;
+		castaway->speed = MAX_CASTAWAYS_SPEED;
+		castaway->dx = castaway->speed;
+		castaway->dy = castaway->speed;
+		castaway->visible = false;
 		castawaycount += 1;
 	}
 }
@@ -153,7 +153,7 @@ void moveSprites_castaways()
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
-		if ((castaway->alive == true))
+		if ((castaway->visible == true))
 		{
 			C2D_SpriteMove(&castaway->spr, castaway->dx, castaway->dy);
 			C2D_SpriteRotateDegrees(&castaway->spr, 1.0f);
@@ -252,33 +252,35 @@ void moveSprite_Lifeboat()
 
 void moveLifeboatController(u32 kHeld)
 {
-
-	//UP
-	if (kHeld & KEY_UP)
+	if (lboat->fuel > 0)
 	{
-		lboat->dy += -lboat->speed;
-	}
-	// //DOWN
-	if (kHeld & KEY_DOWN)
-	{
-		lboat->dy += lboat->speed;
-	}
-	//LEFT
-	if (kHeld & KEY_LEFT)
-	{
-		lboat->dx += -lboat->speed;
-	}
-	//RIGHT
-	if (kHeld & KEY_RIGHT)
-	{
-		lboat->dx += lboat->speed;
+		//UP
+		if (kHeld & KEY_UP)
+		{
+			lboat->dy += -lboat->speed;
+		}
+		// //DOWN
+		if (kHeld & KEY_DOWN)
+		{
+			lboat->dy += lboat->speed;
+		}
+		//LEFT
+		if (kHeld & KEY_LEFT)
+		{
+			lboat->dx += -lboat->speed;
+		}
+		//RIGHT
+		if (kHeld & KEY_RIGHT)
+		{
+			lboat->dx += lboat->speed;
+		}
 	}
 }
 
 /* Bounce Controllers */
 void bounceCastaway_Coastguardship(Castaway *castaway)
 {
-	if ((castaway->picked_up == false) && (castaway->alive = true))
+	if (castaway->visible == true)
 	{
 		castaway->dx = -castaway->dx;
 		castaway->dy = -castaway->dy;
@@ -299,10 +301,10 @@ void bounceCoastGuardShip_Lifeboat()
 /* Lifeboat Controllers */
 void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway)
 {
-	if ((lboat->seatcount < 3) && (castaway->picked_up == false) && (lboat->alive == true))
+	if ((lboat->alive == true) && (lboat->seatcount < 3) && (castaway->visible == true))
 	{
 		lboat->seatcount += 1;
-		castaway->picked_up = true;
+		castaway->visible = false;
 	}
 }
 
@@ -329,10 +331,9 @@ void spawnNewCastaway()
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
-		if ((castaway->alive == false) || (castaway->picked_up == true))
+		if (castaway->visible == false)
 		{
-			castaway->alive = true;
-			castaway->picked_up = false;
+			castaway->visible = true;
 			break;
 		}
 	}
@@ -376,12 +377,12 @@ void collisionSharpedo_Castaway()
 	{
 		Sharpedo *sharpedo = &sharpedos[i];
 		Castaway *castaway = &castaways[i];
-		if ((sharpedo->stalking == false) || ((castaway->alive == true) && (castaway->picked_up == false)))
+		if ((sharpedo->stalking == false) && (castaway->visible == true))
 		{
-			if (abs(sharpedo->spr.params.pos.x - castaways[i].spr.params.pos.x) < 10.0f &&
-				abs(sharpedo->spr.params.pos.y - castaways[i].spr.params.pos.y) < 10.0f)
+			if (abs(sharpedo->spr.params.pos.x - castaways[i].spr.params.pos.x) < 25.0f &&
+				abs(sharpedo->spr.params.pos.y - castaways[i].spr.params.pos.y) < 25.0f)
 			{
-				castaway->alive = false;
+				castaway->visible = false;
 			}
 		}
 	}
@@ -408,7 +409,7 @@ void collisionCastaway_Lifeboat()
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
-		if ((castaway->alive == true) && (castaway->picked_up == false))
+		if (castaway->visible == true)
 		{
 			if (abs(castaway->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
 				abs(castaway->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
@@ -492,7 +493,7 @@ void drawer_castaways()
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
-		if ((castaway->alive == true && castaway->picked_up == false))
+		if (castaway->visible == true)
 			C2D_DrawSprite(&castaways[i].spr);
 	}
 }
@@ -534,7 +535,7 @@ void drawer_scoreboard(float size)
 	snprintf(buf2, sizeof(buf2), "Puntos: %d ", points);
 	snprintf(buf3, sizeof(buf3), "Nivel: %d ", level);
 	snprintf(buf4, sizeof(buf4), "Pasajeros: %d / 3", lboat->seatcount);
-	snprintf(buf5, sizeof(buf5), "Combustible: %d / 25", lboat->fuel);
+	snprintf(buf5, sizeof(buf5), "Combustible: %d / 15", lboat->fuel);
 	snprintf(buf6, sizeof(buf6), "Tiempo: %s ", time_buf);
 
 	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
@@ -594,8 +595,8 @@ void timeController(int time_sentinel)
 	if (time_sentinel == INITIAL_TIME_STATE)
 	{
 		initial_second = time(&current_epoch_time);
-		next_spawn = current_epoch_time + 10;			// Add 10 seconds to the next spawn
-		next_fuel_consumption = current_epoch_time + 1; // Add 2 seconds to the next fuel consumption
+		next_spawn = current_epoch_time + CASTAWAY_SPAWN;			   // Add 10 seconds to the next spawn
+		next_fuel_consumption = current_epoch_time + FUEL_CONSUMPTION; // Add 2 seconds to the next fuel consumption
 	}
 	else
 	{
@@ -681,13 +682,13 @@ int main(int argc, char *argv[])
 			// Time mechanics
 			if (diff_t[0] == 0)
 			{
-				next_spawn = current_epoch_time + 10;
 				spawnNewCastaway();
+				next_spawn = current_epoch_time + CASTAWAY_SPAWN;
 			}
 			if (diff_t[1] == 0 && lboat->fuel > 0)
 			{
-				next_fuel_consumption = current_epoch_time + 1;
-				lboat->fuel -= 1;
+				lboat->fuel -= FUEL_CONSUMPTION;
+				next_fuel_consumption = current_epoch_time + FUEL_CONSUMPTION;
 			}
 
 			/* Control Interface Logic */
