@@ -3,20 +3,20 @@
 /* Globals */
 
 /* Socoreboard Variables */
-bool GAME_START = false;
+int GAME_STATUS = START_GAMESTATE;
 int points = START_POINTS;
 int level = START_LEVEL;
 int lb_speedometer = START_SPEEDOMETER;
 double diff_t = 0;
 
 /* Element Counters */
-int castawaycount;
-int sharkcount;
-int castawaysaved;
+int castawaycount = 0;
+int sharpedocount = 0;
+int castawaysaved = 0;
 
 /*Structures & Data Structures Declaratation*/
-static Castaway castaways[MAX_CASTAWAY];
-static Shark sharks[MAX_SHARKS];
+static Castaway castaways[MAX_CASTAWAYS];
+static Sharpedo sharpedos[MAX_SHARPEDOS];
 static Sea sea;
 static Lifeboat lifeboat;
 static CoastGuardShip coastguardship;
@@ -27,7 +27,7 @@ CoastGuardShip *cgship = &coastguardship;
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
 static C2D_SpriteSheet coastguard_spriteSheet;
-static C2D_SpriteSheet sharks_spriteSheet;
+static C2D_SpriteSheet sharpedo_spriteSheet;
 static C2D_SpriteSheet sea_spriteSheet;
 
 /* C2D_Text Declaration Variables */
@@ -35,7 +35,7 @@ C2D_TextBuf g_staticBuf, g_dynamicBuf;	  // Buffers Declaratation
 C2D_Text g_staticText[STATIC_TEXT_COUNT]; // Array for Static Text
 
 /* Initializer Functions */
-static void init_sprites()
+void init_sprites()
 {
 	castaways_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/castaways.t3x");
 	if (!castaways_spriteSheet)
@@ -43,15 +43,15 @@ static void init_sprites()
 	coastguard_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/coastguard.t3x");
 	if (!sea_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
-	sharks_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sharks.t3x");
-	if (!sharks_spriteSheet)
+	sharpedo_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sharpedos.t3x");
+	if (!sharpedo_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 	sea_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sea.t3x");
 	if (!sea_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 }
 
-static void init_sea()
+void init_sea()
 {
 	Sea *sprite = &sea;
 	// Position, rotation and SPEED
@@ -61,41 +61,60 @@ static void init_sea()
 	sprite->dy = 1.0f;
 }
 
-static void init_castaways()
+void init_castaways()
 {
-	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
-		Castaway *castaway = &castaways[i];
+		Castaway *castaway = &castaways[castawaycount];
 		// Random image, position, rotation and SPEED
-		C2D_SpriteFromSheet(&castaway->spr, castaways_spriteSheet, rand() % 1);
+		C2D_SpriteFromSheet(&castaway->spr, castaways_spriteSheet, rand() % 2);
 		C2D_SpriteSetCenter(&castaway->spr, 0.5f, 0.5f);
 		C2D_SpriteSetPos(&castaway->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
 		C2D_SpriteSetRotation(&castaway->spr, C3D_Angle(rand() / (float)RAND_MAX));
 		castaway->dx = rand() * 4.0f / RAND_MAX - 2.0f;
 		castaway->dy = rand() * 4.0f / RAND_MAX - 2.0f;
-		castaway->alive = true;
+		castaway->alive = false;
 		castaway->picked_up = false;
 		castawaycount += 1;
 	}
 }
 
-static void init_sharks()
+void init_sharpedo()
 {
-	for (size_t i = 0; i < MAX_SHARKS; i++)
+	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 	{
-		Shark *shark = &sharks[i];
-		// Random image, position, rotation and SPEED
-		C2D_SpriteFromSheet(&shark->spr, sharks_spriteSheet, rand() % 1);
-		C2D_SpriteSetCenter(&shark->spr, 0.5f, 0.5f);
-		C2D_SpriteSetPos(&shark->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
-		C2D_SpriteSetRotation(&shark->spr, C3D_Angle(rand() / (float)RAND_MAX));
-		shark->dx = rand() * 4.0f / RAND_MAX - 2.0f;
-		shark->dy = rand() * 4.0f / RAND_MAX - 2.0f;
-		shark->id = i;
+		Sharpedo *sprite = &sharpedos[sharpedocount];
+		if (i >= MEGA_SHARPEDO_SPAWN_LEVEL - 1)
+		{
+			C2D_SpriteFromSheet(&sprite->spr, sharpedo_spriteSheet, 1);
+			sprite->speed = MAX_MEGA_SHARPEDOS_SPEED;
+			sprite->dx = sprite->speed;
+			sprite->dy = sprite->speed;
+		}
+		else
+		{
+			C2D_SpriteFromSheet(&sprite->spr, sharpedo_spriteSheet, 0);
+			sprite->speed = MAX_SHARPEDOS_SPEED;
+			sprite->dx = sprite->speed;
+			sprite->dy = sprite->speed;
+		}
+		// Sprite, SPEED, Random position & rotation
+		C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
+		C2D_SpriteSetPos(&sprite->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
+		C2D_SpriteSetRotation(&sprite->spr, C3D_Angle(rand() / (float)RAND_MAX));
+		sharpedocount += 1;
+		if (i == 0)
+		{
+			sprite->stalking = false; // One Sharpedo for first level
+		}
+		else
+		{
+			sprite->stalking = true; // The rest in stalking mode
+		}
 	}
 }
 
-static void init_lifeboat()
+void init_lifeboat(int lifes)
 {
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&lboat->spr, coastguard_spriteSheet, 0);
@@ -108,15 +127,10 @@ static void init_lifeboat()
 	lboat->alive = true;
 	lboat->seatcount = BOAT_SEAT_COUNT;
 	lboat->fuel = 60;
-
-	if ((GAME_START == false))
-	{
-		GAME_START = true;
-		lboat->lifes = BOAT_LIFES;
-	}
+	lboat->lifes = lifes;
 }
 
-static void init_coastguardship()
+void init_coastguardship()
 {
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&cgship->spr, coastguard_spriteSheet, 8);
@@ -129,9 +143,9 @@ static void init_coastguardship()
 }
 
 /* Motion Functions */
-static void moveSprites_castaways()
+void moveSprites_castaways()
 {
-	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
 		if ((castaway->alive == true))
@@ -151,26 +165,26 @@ static void moveSprites_castaways()
 	}
 }
 
-static void moveSprites_sharks()
+void moveSprites_sharpedos()
 {
-	for (size_t i = 0; i < MAX_SHARKS; i++)
+	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 	{
-		Shark *shark = &sharks[i];
-		C2D_SpriteMove(&shark->spr, shark->dx, shark->dy);
-		C2D_SpriteRotateDegrees(&shark->spr, 1.0f);
+		Sharpedo *sharpedo = &sharpedos[i];
+		C2D_SpriteMove(&sharpedo->spr, sharpedo->dx, sharpedo->dy);
+		C2D_SpriteRotateDegrees(&sharpedo->spr, 1.0f);
 
 		// Check for collision with the screen boundaries
-		if ((shark->spr.params.pos.x < shark->spr.params.pos.w / 2.0f && shark->dx < 0.0f) ||
-			(shark->spr.params.pos.x > (TOP_SCREEN_WIDTH - (shark->spr.params.pos.w / 2.0f)) && shark->dx > 0.0f))
-			shark->dx = -shark->dx;
+		if ((sharpedo->spr.params.pos.x < sharpedo->spr.params.pos.w / 2.0f && sharpedo->dx < 0.0f) ||
+			(sharpedo->spr.params.pos.x > (TOP_SCREEN_WIDTH - (sharpedo->spr.params.pos.w / 2.0f)) && sharpedo->dx > 0.0f))
+			sharpedo->dx = -sharpedo->dx;
 
-		if ((shark->spr.params.pos.y < shark->spr.params.pos.h / 2.0f && shark->dy < 0.0f) ||
-			(shark->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (shark->spr.params.pos.h / 2.0f)) && shark->dy > 0.0f))
-			shark->dy = -shark->dy;
+		if ((sharpedo->spr.params.pos.y < sharpedo->spr.params.pos.h / 2.0f && sharpedo->dy < 0.0f) ||
+			(sharpedo->spr.params.pos.y > (TOP_SCREEN_HEIGHT - (sharpedo->spr.params.pos.h / 2.0f)) && sharpedo->dy > 0.0f))
+			sharpedo->dy = -sharpedo->dy;
 	}
 }
 
-static void moveSprite_coastguardship()
+void moveSprite_coastguardship()
 {
 	C2D_SpriteMove(&cgship->spr, cgship->dx, cgship->dy);
 	//Check for collision with the screen boundaries
@@ -188,7 +202,7 @@ static void moveSprite_coastguardship()
 	}
 }
 
-static void moveLifeboat_sprite()
+void moveLifeboat_sprite()
 {
 
 	if ((lboat->alive == true))
@@ -225,7 +239,7 @@ static void moveLifeboat_sprite()
 	}
 }
 
-static void moveLifeboatController(u32 kHeld)
+void moveLifeboatController(u32 kHeld)
 {
 
 	//UP
@@ -260,10 +274,10 @@ static void bounceCastaway_Coastguardship(Castaway *castaway)
 	}
 }
 
-static void bounceShark_Coastguardship(Shark *Shark)
+static void bounceSharpedo_Coastguardship(Sharpedo *sharpedo)
 {
-	Shark->dx = -Shark->dx;
-	Shark->dy = -Shark->dy;
+	sharpedo->dx = -sharpedo->dx;
+	sharpedo->dy = -sharpedo->dy;
 }
 
 static void bounceCoastGuardShip_Lifeboat()
@@ -273,38 +287,36 @@ static void bounceCoastGuardShip_Lifeboat()
 }
 
 /* Lifeboat Controllers */
-static void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway)
+void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway)
 {
-	if ((lboat->seatcount < 3) && (castaway->picked_up == false) && (lboat->alive = true))
+	if ((lboat->seatcount < 3) && (castaway->picked_up == false) && (lboat->alive == true))
 	{
-		lboat->seatcount = lboat->seatcount + 1;
+		lboat->seatcount += 1;
 		castaway->picked_up = true;
 	}
 }
 
-static void lifeboatDeath(Lifeboat *lboat)
+void lifeboatDeath(Lifeboat *lboat)
 {
-	if ((lboat->alive == true))
+	if (lboat->alive == true && lboat->lifes > 0)
 	{
-		lboat->lifes = lboat->lifes - 1;
-		lboat->fuel = 60;
-	}
-	if ((lboat->lifes > 0))
-	{
-		init_lifeboat();
-	}
-	else
-	{
-		lboat->alive = false;
-		lboat->seatcount = BOAT_SEAT_COUNT;
-		//TODO: Call gameover function
+		lboat->lifes -= 1;
+		init_lifeboat(lboat->lifes);
+		// GAMEOVER
+		if (lboat->lifes == 0)
+		{
+			lboat->alive = false;
+			lboat->seatcount = BOAT_SEAT_COUNT;
+			gameStatusController(GAMEOVER_GAMESTATE);
+		}
 	}
 }
 
 /* Spawn Controllers */
-static void spawnNewCastaway()
+void spawnNewCastaway()
 {
-	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	//Check in the castaway array to restore the status of the elements.
+	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
 		if ((castaway->alive == false) || (castaway->picked_up == true))
@@ -316,13 +328,27 @@ static void spawnNewCastaway()
 	}
 }
 
+void spawnNewSharpedo()
+{
+	//Check in the castaway array to restore the status of the elements.
+	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
+	{
+		Sharpedo *sharpedo = &sharpedos[i];
+		if (sharpedo->stalking == true)
+		{
+			sharpedo->stalking = false;
+			break;
+		}
+	}
+}
+
 /* Collision Functions */
-// static void collisionShark_Shark()
+// static void collisionSharpedo_Sharpedo()
 // {
-// 	for (size_t i = 0; i < MAX_SHARKS; i++)
+// 	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 // 	{
-// 		Shark *shark = &sharks[i];
-// 		Shark *shark2 = &sharks[i];
+// 		Shark *shark = &sharpedos[i];
+// 		Shark *shark2 = &sharpedos[i];
 
 // 		if (abs(shark->spr.params.pos.x - shark2[i].spr.params.pos.x) < 20.0f &&
 // 			abs(shark->spr.params.pos.y - shark2[i].spr.params.pos.y) < 20.0f)
@@ -334,66 +360,79 @@ static void spawnNewCastaway()
 // 	}
 // }
 
-static void collisionShark_Castaway()
+void collisionSharpedo_Castaway()
 {
-	for (size_t i = 0; i < MAX_SHARKS; i++)
+	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 	{
-		Shark *shark = &sharks[i];
+		Sharpedo *sharpedo = &sharpedos[i];
 		Castaway *castaway = &castaways[i];
-
-		if (abs(shark->spr.params.pos.x - castaways[i].spr.params.pos.x) < 20.0f &&
-			abs(shark->spr.params.pos.y - castaways[i].spr.params.pos.y) < 20.0f)
+		if ((sharpedo->stalking == false) || ((castaway->alive == true) && (castaway->picked_up == false)))
 		{
-			castaway->alive = false;
+			if (abs(sharpedo->spr.params.pos.x - castaways[i].spr.params.pos.x) < 10.0f &&
+				abs(sharpedo->spr.params.pos.y - castaways[i].spr.params.pos.y) < 10.0f)
+			{
+				castaway->alive = false;
+			}
 		}
 	}
 }
 
-static void collisionShark_Lifeboat()
+void collisionSharpedo_Lifeboat()
 {
-	for (size_t i = 0; i < MAX_SHARKS; i++)
+	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 	{
-		Shark *shark = &sharks[i];
-
-		if (abs(shark->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
-			abs(shark->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
+		Sharpedo *sharpedo = &sharpedos[i];
+		if (sharpedo->stalking == false)
 		{
-			lifeboatDeath(lboat);
+			if (abs(sharpedo->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
+				abs(sharpedo->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
+			{
+				lifeboatDeath(lboat);
+			}
 		}
 	}
 }
 
-static void collisionCastaway_Lifeboat()
+void collisionCastaway_Lifeboat()
 {
-	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
-		if (abs(castaway->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
-			abs(castaway->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
+		if ((castaway->alive == true) && (castaway->picked_up == false))
 		{
-			lifeboatpickUp(lboat, castaway);
+			if (abs(castaway->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
+				abs(castaway->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
+			{
+				lifeboatpickUp(lboat, castaway);
+			}
 		}
 	}
 }
 
-static void collisionCoastGuardShip_Lifeboat()
+void collisionCoastGuardShip_Lifeboat()
 {
-	if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
-		abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
+	// Lifeboat current status Check
+	if (lboat->alive == true && lboat->seatcount > 0)
 	{
-		// Bounce
-		bounceCoastGuardShip_Lifeboat();
-
-		//Lifeboat Fuel Recharge
-		lboat->fuel = FUEL_RECHARGE;
-
-		//Increase Points
-		if (lboat->seatcount > 0)
+		// Collision Check
+		if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 40.0f &&
+			abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 40.0f)
 		{
+			// Bounce
+			bounceCoastGuardShip_Lifeboat();
+
+			//Lifeboat Fuel Recharge
+			lboat->fuel = FUEL_RECHARGE;
+
+			//Increase Points
 			for (size_t i = 0; i < lboat->seatcount; i++)
 			{
-				points += 10;
+				points += RESCUE_POINTS;
 				castawaysaved += 1;
+				if (points % NEXT_LEVEL == 0)
+				{
+					gameStatusController(LEVEL_UP_GAMESTATE); //LEVEL UP!
+				}
 			}
 			lboat->seatcount = 0;
 		}
@@ -402,7 +441,7 @@ static void collisionCoastGuardShip_Lifeboat()
 
 static void collisionCastaway_Coastguardship()
 {
-	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
 		if (abs(castaway->spr.params.pos.x - cgship->spr.params.pos.x) < 40.0f &&
@@ -413,71 +452,57 @@ static void collisionCastaway_Coastguardship()
 	}
 }
 
-static void collisionShark_Coastguardship()
+static void collisionSharpedo_Coastguardship()
 {
-	for (size_t i = 0; i < MAX_SHARKS; i++)
+	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 	{
-		Shark *shark = &sharks[i];
-		if (abs(shark->spr.params.pos.x - cgship->spr.params.pos.x) < 40.0f &&
-			abs(shark->spr.params.pos.y - cgship->spr.params.pos.y) < 30.0f)
+		Sharpedo *sharpedo = &sharpedos[i];
+		if (abs(sharpedo->spr.params.pos.x - cgship->spr.params.pos.x) < 40.0f &&
+			abs(sharpedo->spr.params.pos.y - cgship->spr.params.pos.y) < 30.0f)
 		{
-			bounceShark_Coastguardship(shark);
+			bounceSharpedo_Coastguardship(sharpedo);
 		}
 	}
 }
 
 /* Drawer Functions */
-static void drawer_sea()
+void drawer_sea()
 {
 	C2D_DrawSprite(&sea.spr);
 }
 
-static void drawer_castaways()
+void drawer_castaways()
 {
-	for (size_t i = 0; i < MAX_CASTAWAY; i++)
+	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
 		Castaway *castaway = &castaways[i];
 		if ((castaway->alive == true && castaway->picked_up == false))
-		{
 			C2D_DrawSprite(&castaways[i].spr);
-		}
 	}
 }
 
-static void drawer_sharks()
+void drawer_sharpedos()
 {
-	for (size_t i = 0; i < MAX_SHARKS; i++)
-		C2D_DrawSprite(&sharks[i].spr);
+	for (size_t i = 0; i < sharpedocount; i++)
+	{
+		Sharpedo *sharpedo = &sharpedos[i];
+		if (sharpedo->stalking == false)
+			C2D_DrawSprite(&sharpedos[i].spr);
+	}
 }
 
-static void drawer_lifeboat()
+void drawer_lifeboat()
 {
 	if ((lboat->alive == true))
-	{
 		C2D_DrawSprite(&lifeboat.spr);
-	}
 }
 
-static void drawer_coastguardship()
+void drawer_coastguardship()
 {
 	C2D_DrawSprite(&coastguardship.spr);
 }
 
-static void sceneInit_bottom(void)
-{
-	// Create two text buffers: one for static text, and another one for
-	// dynamic text - the latter will be cleared at each frame.
-	g_staticBuf = C2D_TextBufNew(4096); // support up to 4096 glyphs in the buffer
-	g_dynamicBuf = C2D_TextBufNew(4096);
-
-	// Parse the static text strings
-	C2D_TextParse(&g_staticText[0], g_staticBuf, "Lifeboats!");
-
-	// Optimize the static text strings
-	C2D_TextOptimize(&g_staticText[0]);
-}
-
-static void drawer_scoreboard(float size)
+void drawer_scoreboard(float size)
 {
 	// Clear the dynamic text buffer
 	C2D_TextBufClear(g_dynamicBuf);
@@ -514,7 +539,22 @@ static void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
-static void scenesExit(void)
+/* System Functions */
+void sceneInit_bottom()
+{
+	// Create two text buffers: one for static text, and another one for
+	// dynamic text - the latter will be cleared at each frame.
+	g_staticBuf = C2D_TextBufNew(4096); // support up to 4096 glyphs in the buffer
+	g_dynamicBuf = C2D_TextBufNew(4096);
+
+	// Parse the static text strings
+	C2D_TextParse(&g_staticText[0], g_staticBuf, "Lifeboats!");
+
+	// Optimize the static text strings
+	C2D_TextOptimize(&g_staticText[0]);
+}
+
+void scenesExit()
 {
 	// Delete the text buffers
 	C2D_TextBufDelete(g_dynamicBuf);
@@ -522,9 +562,34 @@ static void scenesExit(void)
 
 	// Delete graphics
 	C2D_SpriteSheetFree(castaways_spriteSheet);
-	C2D_SpriteSheetFree(sharks_spriteSheet);
+	C2D_SpriteSheetFree(sharpedo_spriteSheet);
 	C2D_SpriteSheetFree(coastguard_spriteSheet);
 	C2D_SpriteSheetFree(sea_spriteSheet);
+}
+
+/* Game Controller */
+void gameStatusController(int sentinel)
+{
+	switch (sentinel)
+	{
+	case GAMEOVER_GAMESTATE: //Lose Game
+		GAME_STATUS = GAMEOVER_GAMESTATE;
+		break;
+	case START_GAMESTATE: //Start Game
+		//TODO
+		break;
+	case LEVEL_UP_GAMESTATE: //Level Up
+		level += 1;
+		spawnNewSharpedo();
+		GAME_STATUS = LEVEL_UP_GAMESTATE;
+		break;
+	case NEW_GAMESTATE: //New Game
+		//TODO
+		break;
+	case WIN_GAMESTATE: //Win Game
+		//TODO
+		break;
+	}
 }
 
 int main(int argc, char *argv[])
@@ -553,8 +618,8 @@ int main(int argc, char *argv[])
 	// Initialize sprites for Structures
 	init_sea();
 	init_castaways();
-	init_sharks();
-	init_lifeboat();
+	init_sharpedo();
+	init_lifeboat(BOAT_LIFES);
 	init_coastguardship();
 
 	// Initialize the scene for Scoreboard
@@ -563,67 +628,74 @@ int main(int argc, char *argv[])
 	// Main loop
 	while (aptMainLoop())
 	{
-		hidScanInput();
-
-		// Respond to user input
-		u32 kDown = hidKeysDown();
-		u32 kHeld = hidKeysHeld();
-
-		//Timer
-		time(&current_epoch_time);						   // Get current EPOCH time from System
-		diff_t = difftime(next_spawn, current_epoch_time); // Time Difference
-		if (diff_t == 0)
+		if (GAME_STATUS == GAMEOVER_GAMESTATE)
 		{
-			next_spawn = current_epoch_time + 10;
-			spawnNewCastaway();
+			getchar(); // Pause program
 		}
+		else
+		{
+			hidScanInput();
 
-		/* Control Interface Logic */
-		// break in order to return to hbmenu
-		if (kDown & KEY_START)
-			break;
+			// Respond to user input
+			u32 kDown = hidKeysDown();
+			u32 kHeld = hidKeysHeld();
 
-		// D-PAD Controller
-		if (kHeld & KEY_UP || kHeld & KEY_DOWN || kHeld & KEY_LEFT || kHeld & KEY_RIGHT)
-			moveLifeboatController(kHeld);
+			//Timer
+			time(&current_epoch_time);						   // Get current EPOCH time from System
+			diff_t = difftime(next_spawn, current_epoch_time); // Time Difference
+			if (diff_t == 0)
+			{
+				next_spawn = current_epoch_time + 10;
+				spawnNewCastaway();
+			}
 
-		// Move sprites
-		moveSprites_castaways();
-		moveSprites_sharks();
-		moveLifeboat_sprite();
-		moveSprite_coastguardship();
+			/* Control Interface Logic */
+			// break in order to return to hbmenu
+			if (kDown & KEY_START)
+				break;
 
-		// Collision Detectors
-		// collisionShark_Shark();
-		collisionShark_Castaway();
-		collisionShark_Lifeboat();
-		collisionShark_Coastguardship();
-		collisionCastaway_Lifeboat();
-		collisionCoastGuardShip_Lifeboat();
-		collisionCastaway_Coastguardship();
+			// D-PAD Controller
+			if (kHeld & KEY_UP || kHeld & KEY_DOWN || kHeld & KEY_LEFT || kHeld & KEY_RIGHT)
+				moveLifeboatController(kHeld);
 
-		/* Start Render the scene */
-		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+			// Move sprites
+			moveSprites_castaways();
+			moveSprites_sharpedos();
+			moveLifeboat_sprite();
+			moveSprite_coastguardship();
 
-		/* TOP Screen */
-		C2D_TargetClear(top, BLACK);
-		C2D_SceneBegin(top);
+			// Collision Detectors
+			// collisionSharpedo_Sharpedo();
+			collisionSharpedo_Castaway();
+			collisionSharpedo_Lifeboat();
+			collisionSharpedo_Coastguardship();
+			collisionCastaway_Lifeboat();
+			collisionCoastGuardShip_Lifeboat();
+			collisionCastaway_Coastguardship();
 
-		//Drawer Sprites
-		drawer_sea();
-		drawer_castaways();
-		drawer_sharks();
-		drawer_lifeboat();
-		drawer_coastguardship();
+			/* Start Render the scene */
+			C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 
-		C2D_Flush(); // Ensures all 2D objects so far have been drawn.
+			/* TOP Screen */
+			C2D_TargetClear(top, BLACK);
+			C2D_SceneBegin(top);
 
-		/* Bottom Screen */
-		C2D_TargetClear(bottom, BLACK);
-		C2D_SceneBegin(bottom);
-		drawer_scoreboard(FONT_SIZE);
+			//Drawer Sprites
+			drawer_sea();
+			drawer_castaways();
+			drawer_sharpedos();
+			drawer_lifeboat();
+			drawer_coastguardship();
 
-		C3D_FrameEnd(0); // Finish render the scene
+			C2D_Flush(); // Ensures all 2D objects so far have been drawn.
+
+			/* Bottom Screen */
+			C2D_TargetClear(bottom, BLACK);
+			C2D_SceneBegin(bottom);
+			drawer_scoreboard(FONT_SIZE);
+
+			C3D_FrameEnd(0); // Finish render the scene
+		}
 	}
 
 	// Deinitialize the scene
