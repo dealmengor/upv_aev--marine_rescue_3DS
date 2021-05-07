@@ -19,7 +19,7 @@
 
 // Game Configuratation Variables
 #define MAX_SHARKS 1
-#define MAX_CASTAWAY 10
+#define MAX_CASTAWAY 5
 #define START_POINTS 0
 #define START_SPEEDOMETER 0
 #define GAME_TIME 0

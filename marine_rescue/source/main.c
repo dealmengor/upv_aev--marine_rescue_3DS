@@ -266,6 +266,12 @@ static void bounceShark_Coastguardship(Shark *Shark)
 	Shark->dy = -Shark->dy;
 }
 
+static void bounceCoastGuardShip_Lifeboat()
+{
+	lboat->dx = -lboat->dx;
+	lboat->dy = -lboat->dy;
+}
+
 /* Lifeboat Controllers */
 static void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway)
 {
@@ -375,6 +381,9 @@ static void collisionCoastGuardShip_Lifeboat()
 	if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 20.0f &&
 		abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 20.0f)
 	{
+		// Bounce
+		bounceCoastGuardShip_Lifeboat();
+
 		//Lifeboat Fuel Recharge
 		lboat->fuel = FUEL_RECHARGE;
 
