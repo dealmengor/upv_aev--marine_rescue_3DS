@@ -576,34 +576,6 @@ void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
-
-	//TESTING
-	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE], testbuf4[BUFFER_SIZE], testbuf5[BUFFER_SIZE];
-	C2D_Text t, t2, t3, t4, t5;
-
-	snprintf(testbuf, sizeof(testbuf), "lboat.x: %f ", lboat->spr.params.pos.x);
-	snprintf(testbuf2, sizeof(testbuf2), "lboat.y: %f ", lboat->spr.params.pos.y);
-	snprintf(testbuf3, sizeof(testbuf3), "lboat.dx: %f ", lboat->dx);
-	snprintf(testbuf4, sizeof(testbuf4), "lboat.dy: %f ", lboat->dy);
-	snprintf(testbuf5, sizeof(testbuf5), "sharpedocount: %d ", sharpedocount);
-
-	C2D_TextParse(&t, g_dynamicBuf, testbuf);
-	C2D_TextParse(&t2, g_dynamicBuf, testbuf2);
-	C2D_TextParse(&t3, g_dynamicBuf, testbuf3);
-	C2D_TextParse(&t4, g_dynamicBuf, testbuf4);
-	C2D_TextParse(&t5, g_dynamicBuf, testbuf5);
-
-	C2D_TextOptimize(&t);
-	C2D_TextOptimize(&t2);
-	C2D_TextOptimize(&t3);
-	C2D_TextOptimize(&t4);
-	C2D_TextOptimize(&t5);
-
-	C2D_DrawText(&t, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 130.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&t2, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&t3, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&t4, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 190.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&t5, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
 /* System Functions */
