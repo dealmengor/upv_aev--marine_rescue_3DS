@@ -59,11 +59,14 @@
 /* Enumerated variables */
 typedef enum
 {
-    GAMEOVER_GAMESTATE, // 0
+    EXIT_GAMESTATE,     // 0
     START_GAMESTATE,    // 1
-    LEVEL_UP_GAMESTATE, // 2
-    NEW_GAMESTATE,      // 3
-    WIN_GAMESTATE       // 4
+    NEW_GAMESTATE,      // 2
+    PAUSED_GAMESTATE,   // 3
+    LEVEL_UP_GAMESTATE, // 4
+    GAMEOVER_GAMESTATE, // 5
+    WIN_GAMESTATE,      // 6
+    MENU_GAMESTATE      // 7
 } game_state;
 
 typedef enum
@@ -143,6 +146,9 @@ void init_sharpedo();
 void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y);
 void init_coastguardship();
 
+/* Sprites Controller */
+void controllerSprites_lifeboat(int sprite_id);
+
 /* Motion Functions */
 void moveSprites_castaways();
 void moveSprites_sharpedos();
@@ -164,6 +170,7 @@ void spawnNewCastaway();
 void spawnNewSharpedo();
 
 /* Collision Functions */
+//void collisionSharpedo_Sharpedo();
 void collisionsharpedo_Castaway();
 void collisionsharpedo_Lifeboat();
 void collisionCastaway_Lifeboat();
@@ -182,4 +189,13 @@ void drawer_scoreboard(float size);
 /* System Functions */
 void sceneInit_bottom();
 void scenesExit();
+
+/* Game Controllers */
 void gameStatusController(int sentinel);
+void gameTimeController(int time_sentinel);
+void gameInputController(int game_sentinel, u32 kDown, u32 kHeld);
+void gameInitController();
+void gameMoveSpritesController();
+void gameCollisionsController();
+void gameDrawersTopScreenController(int game_sentinel);
+void gameDrawersBottomScreenController(int game_sentinel);

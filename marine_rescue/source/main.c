@@ -3,11 +3,10 @@
 /* Globals */
 
 /* Socoreboard Variables */
-int game_status = START_GAMESTATE;
+int game_status = MENU_GAMESTATE;
 int points = START_POINTS;
 int level = START_LEVEL;
 int lb_speedometer = START_SPEEDOMETER;
-int last_pos_x, last_pos_y;
 
 /* Time Variables */
 time_t current_epoch_time, initial_second, game_time, next_spawn, next_fuel_consumption;
@@ -148,10 +147,11 @@ void init_coastguardship()
 	cgship->dy = 0;
 }
 
-/* Sprite Controller */
+/* Sprites Controller */
 void controllerSprites_lifeboat(int sprite_id)
 {
 	// Saved last lifeboat position
+	int last_pos_x, last_pos_y;
 	last_pos_x = lboat->spr.params.pos.x;
 	last_pos_y = lboat->spr.params.pos.y;
 
@@ -415,7 +415,7 @@ void spawnNewSharpedo()
 }
 
 /* Collision Functions */
-// static void collisionSharpedo_Sharpedo()
+// void collisionSharpedo_Sharpedo()
 // {
 // 	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 // 	{
@@ -616,6 +616,30 @@ void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
 	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
+
+	//TESTING
+	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE], testbuf4[BUFFER_SIZE];
+	C2D_Text t, t2, t3, t4;
+
+	snprintf(testbuf, sizeof(testbuf), "lboat.x: %d ", (int)lboat->spr.params.pos.x);
+	snprintf(testbuf2, sizeof(testbuf2), "lboat.y: %d ", (int)lboat->spr.params.pos.y);
+	snprintf(testbuf3, sizeof(testbuf3), "lboat.last_x: %d ", (int)last_pos_x);
+	snprintf(testbuf4, sizeof(testbuf4), "lboat.last_y: %d ", (int)last_pos_y);
+
+	C2D_TextParse(&t, g_dynamicBuf, testbuf);
+	C2D_TextParse(&t2, g_dynamicBuf, testbuf2);
+	C2D_TextParse(&t3, g_dynamicBuf, testbuf3);
+	C2D_TextParse(&t4, g_dynamicBuf, testbuf4);
+
+	C2D_TextOptimize(&t);
+	C2D_TextOptimize(&t2);
+	C2D_TextOptimize(&t3);
+	C2D_TextOptimize(&t4);
+
+	C2D_DrawText(&t, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 130.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t2, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t3, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t4, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 190.0f, 0.5f, size, size, WHITE);
 }
 
 /* System Functions */
@@ -651,27 +675,35 @@ void gameStatusController(int game_sentinel)
 {
 	switch (game_sentinel)
 	{
-	case GAMEOVER_GAMESTATE: //Lose Game
-		game_status = GAMEOVER_GAMESTATE;
+	case EXIT_GAMESTATE:
+		game_status = EXIT_GAMESTATE;
 		break;
-	case START_GAMESTATE: //Start Game
-		//TODO
+	case START_GAMESTATE:
+		game_status = START_GAMESTATE;
 		break;
-	case LEVEL_UP_GAMESTATE: //Level Up
+	case NEW_GAMESTATE:
+		game_status = NEW_GAMESTATE;
+		break;
+	case PAUSED_GAMESTATE:
+		game_status = PAUSED_GAMESTATE;
+	case LEVEL_UP_GAMESTATE:
 		level += 1;
 		spawnNewSharpedo();
 		game_status = LEVEL_UP_GAMESTATE;
 		break;
-	case NEW_GAMESTATE: //New Game
-		//TODO
+	case GAMEOVER_GAMESTATE:
+		game_status = GAMEOVER_GAMESTATE;
 		break;
-	case WIN_GAMESTATE: //Win Game
-		//TODO
+	case WIN_GAMESTATE:
+		game_status = WIN_GAMESTATE;
+		break;
+	case MENU_GAMESTATE:
+		game_status = MENU_GAMESTATE;
 		break;
 	}
 }
 
-void timeController(int time_sentinel)
+void gameTimeController(int time_sentinel)
 {
 	// Initialize the time variables
 	time(&current_epoch_time); // Get current EPOCH time from System
@@ -695,6 +727,79 @@ void timeController(int time_sentinel)
 	}
 }
 
+void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
+{
+	// Start Game
+	if (game_sentinel == MENU_GAMESTATE)
+	{
+		if (kDown & KEY_START)
+			gameStatusController(START_GAMESTATE);
+	}
+
+	// START GAMESTATE Controls
+	if (game_sentinel == START_GAMESTATE)
+	{
+		// D-PAD Controller
+		if (kHeld & KEY_UP || kHeld & KEY_DOWN || kHeld & KEY_LEFT || kHeld & KEY_RIGHT)
+			moveLifeboatController(kHeld);
+
+		// Pause the Game
+		if (kDown & KEY_SELECT)
+			gameStatusController(PAUSED_GAMESTATE);
+	}
+
+	// Break in order to return to hbmenu
+	if ((kDown & KEY_L) && (kDown & KEY_R))
+		gameStatusController(EXIT_GAMESTATE);
+}
+
+void gameInitController()
+{
+	init_sea();
+	init_castaways();
+	init_sharpedo();
+	init_coastguardship();
+	init_lifeboat(BOAT_LIFES, false, 0, 0);
+}
+
+void gameMoveSpritesController()
+{
+	moveSprites_castaways();
+	moveSprites_sharpedos();
+	moveSprite_Lifeboat();
+	moveSprite_coastguardship();
+}
+
+void gameCollisionsController()
+{
+	// collisionSharpedo_Sharpedo();
+	collisionSharpedo_Castaway();
+	collisionSharpedo_Lifeboat();
+	collisionSharpedo_Coastguardship();
+	collisionCastaway_Lifeboat();
+	collisionCoastGuardShip_Lifeboat();
+	collisionCastaway_Coastguardship();
+}
+
+void gameDrawersTopScreenController(int game_sentinel)
+{
+	if (game_sentinel == START_GAMESTATE)
+	{
+		drawer_sea();
+		drawer_castaways();
+		drawer_sharpedos();
+		drawer_lifeboat();
+		drawer_coastguardship();
+	}
+}
+
+void gameDrawersBottomScreenController(int game_sentinel)
+{
+	if (game_sentinel == START_GAMESTATE)
+		drawer_scoreboard(FONT_SIZE);
+}
+
+/* Main Function */
 int main(int argc, char *argv[])
 {
 	// Init libs
@@ -706,7 +811,7 @@ int main(int argc, char *argv[])
 	srand(time(NULL)); // Sets a seed for random numbers
 
 	// Init Timer
-	timeController(INITIAL_TIME_STATE);
+	gameTimeController(INITIAL_TIME_STATE);
 
 	// Create screens
 	C3D_RenderTarget *top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
@@ -716,11 +821,7 @@ int main(int argc, char *argv[])
 	init_sprites();
 
 	// Initialize sprites for Structures
-	init_sea();
-	init_castaways();
-	init_sharpedo();
-	init_coastguardship();
-	init_lifeboat(BOAT_LIFES, false, 0, 0);
+	gameInitController();
 
 	// Initialize the scene for Scoreboard
 	sceneInit_bottom();
@@ -728,14 +829,26 @@ int main(int argc, char *argv[])
 	// Main loop
 	while (aptMainLoop())
 	{
-		if (game_status == GAMEOVER_GAMESTATE)
-		{
-			getchar(); // Pause program
-		}
-		else
+		/* Control Interface Logic */
+		hidScanInput();
+
+		// Respond to user input
+		u32 kDown = hidKeysDown();
+		u32 kHeld = hidKeysHeld();
+
+		gameInputController(game_status, kDown, kHeld);
+
+		// General Game Status Validatation
+		if (game_status == LEVEL_UP_GAMESTATE)
+			goto exit_main_loop; // Close game
+
+		if (game_status == PAUSED_GAMESTATE)
+			getchar(); // Pause game
+
+		if (game_status == START_GAMESTATE)
 		{
 			/* Time Controller */
-			timeController(TIME_CONTINUITY);
+			gameTimeController(TIME_CONTINUITY);
 
 			// Time mechanics
 			if (diff_t[0] == 0)
@@ -749,61 +862,51 @@ int main(int argc, char *argv[])
 				next_fuel_consumption = current_epoch_time + BOAT_FUEL_CONSUMPTION;
 			}
 
-			/* Control Interface Logic */
-			hidScanInput();
+			/* Move sprites */
+			gameMoveSpritesController();
 
-			// Respond to user input
-			u32 kDown = hidKeysDown();
-			u32 kHeld = hidKeysHeld();
-
-			// break in order to return to hbmenu
-			if (kDown & KEY_START)
-				break;
-
-			// D-PAD Controller
-			if (kHeld & KEY_UP || kHeld & KEY_DOWN || kHeld & KEY_LEFT || kHeld & KEY_RIGHT)
-				moveLifeboatController(kHeld);
-
-			// Move sprites
-			moveSprites_castaways();
-			moveSprites_sharpedos();
-			moveSprite_Lifeboat();
-			moveSprite_coastguardship();
-
-			// Collision Detectors
-			// collisionSharpedo_Sharpedo();
-			collisionSharpedo_Castaway();
-			collisionSharpedo_Lifeboat();
-			collisionSharpedo_Coastguardship();
-			collisionCastaway_Lifeboat();
-			collisionCoastGuardShip_Lifeboat();
-			collisionCastaway_Coastguardship();
-
-			/* Start Render the scene */
-			C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-
-			/* TOP Screen */
-			C2D_TargetClear(top, BLACK);
-			C2D_SceneBegin(top);
-
-			//Drawer Sprites
-			drawer_sea();
-			drawer_castaways();
-			drawer_sharpedos();
-			drawer_lifeboat();
-			drawer_coastguardship();
-
-			C2D_Flush(); // Ensures all 2D objects so far have been drawn.
-
-			/* Bottom Screen */
-			C2D_TargetClear(bottom, BLACK);
-			C2D_SceneBegin(bottom);
-			drawer_scoreboard(FONT_SIZE);
-
-			C3D_FrameEnd(0); // Finish render the scene
+			/* Collision Detectors */
+			gameCollisionsController();
 		}
+
+		/* Start Render the scene for both screens */
+		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+
+		/* TOP Screen */
+		C2D_TargetClear(top, BLACK);
+		C2D_SceneBegin(top);
+
+		//Drawer TOP Sprites
+		if (game_status == START_GAMESTATE)
+		{
+			gameDrawersTopScreenController(START_GAMESTATE);
+		}
+		else
+		{
+			gameDrawersTopScreenController(MENU_GAMESTATE);
+		}
+
+		C2D_Flush(); // Ensures all 2D objects so far have been drawn.
+
+		/* Bottom Screen */
+		C2D_TargetClear(bottom, BLACK);
+		C2D_SceneBegin(bottom);
+
+		//Drawer BOTTOM Sprites
+		if (game_status == START_GAMESTATE)
+		{
+			gameDrawersBottomScreenController(START_GAMESTATE);
+		}
+		else
+		{
+			gameDrawersBottomScreenController(MENU_GAMESTATE);
+		}
+
+		/* Finish render the scene */
+		C3D_FrameEnd(0);
 	}
 
+exit_main_loop:
 	// Deinitialize the scene
 	scenesExit();
 
