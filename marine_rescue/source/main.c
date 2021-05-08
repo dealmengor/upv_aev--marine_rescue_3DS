@@ -24,6 +24,7 @@ int castawaysaved = 0;
 static Castaway castaways[MAX_CASTAWAYS];
 static Sharpedo sharpedos[MAX_SHARPEDOS];
 static Sea sea;
+static Scoreboard scoreboard;
 static Lifeboat lifeboat;
 static CoastGuardShip coastguardship;
 
@@ -35,25 +36,33 @@ static C2D_SpriteSheet castaways_spriteSheet;
 static C2D_SpriteSheet coastguard_spriteSheet;
 static C2D_SpriteSheet sharpedo_spriteSheet;
 static C2D_SpriteSheet sea_spriteSheet;
+static C2D_SpriteSheet scoreboard_spriteSheet;
 
 /* C2D_Text Declaration Variables */
-C2D_TextBuf g_staticBuf, g_dynamicBuf;	  // Buffers Declaratation
+C2D_TextBuf g_staticBuf,
+	g_dynamicBuf;						  // Buffers Declaratation
 C2D_Text g_staticText[STATIC_TEXT_COUNT]; // Array for Static Text
 
 /* Initializer Functions */
 void init_sprites()
 {
+	// Characters
 	castaways_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/castaways.t3x");
 	if (!castaways_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 	coastguard_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/coastguard.t3x");
-	if (!sea_spriteSheet)
+	if (!coastguard_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 	sharpedo_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sharpedos.t3x");
 	if (!sharpedo_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
+
+	// Screens
 	sea_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sea.t3x");
 	if (!sea_spriteSheet)
+		svcBreak(USERBREAK_PANIC);
+	scoreboard_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/screens.t3x");
+	if (!scoreboard_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 }
 
@@ -64,6 +73,16 @@ void init_sea()
 	C2D_SpriteFromSheet(&sprite->spr, sea_spriteSheet, 0);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
 	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
+void init_scoreboard()
+{
+	Scoreboard *sprite = &scoreboard;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, scoreboard_spriteSheet, 0);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
 	sprite->dy = 1.0f;
 }
 
@@ -546,6 +565,11 @@ void drawer_sea()
 	C2D_DrawSprite(&sea.spr);
 }
 
+void drawer_scoreboard()
+{
+	C2D_DrawSprite(&scoreboard.spr);
+}
+
 void drawer_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
@@ -577,7 +601,7 @@ void drawer_coastguardship()
 	C2D_DrawSprite(&coastguardship.spr);
 }
 
-void drawer_scoreboard(float size)
+void drawer_dynamic_score(float size)
 {
 	// Clear the dynamic text buffer
 	C2D_TextBufClear(g_dynamicBuf);
@@ -589,48 +613,40 @@ void drawer_scoreboard(float size)
 	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE], buf5[BUFFER_SIZE], buf6[BUFFER_SIZE];
 	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers, dynText_fuel, dynText_time;
 
-	snprintf(buf, sizeof(buf), "Lifes: %d ", lboat->lifes);
-	snprintf(buf2, sizeof(buf2), "Points: %d ", points);
-	snprintf(buf3, sizeof(buf3), "Level: %d ", level);
-	snprintf(buf4, sizeof(buf4), "Passengers: %d / 3", lboat->seatcount);
-	snprintf(buf5, sizeof(buf5), "Fuel: %d / 15", lboat->fuel);
-	snprintf(buf6, sizeof(buf6), "Time: %s ", time_buf);
+	snprintf(buf, sizeof(buf), " %d", lboat->lifes);
+	snprintf(buf2, sizeof(buf2), " %d", points);
+	snprintf(buf3, sizeof(buf3), " %d", level);
+	snprintf(buf5, sizeof(buf5), " %d", lboat->fuel);
+	snprintf(buf4, sizeof(buf4), "%d/3", lboat->seatcount);
+	snprintf(buf6, sizeof(buf6), " %s", time_buf);
 
 	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
 	C2D_TextParse(&dynText_points, g_dynamicBuf, buf2);
 	C2D_TextParse(&dynText_levels, g_dynamicBuf, buf3);
-	C2D_TextParse(&dynText_passengers, g_dynamicBuf, buf4);
 	C2D_TextParse(&dynText_fuel, g_dynamicBuf, buf5);
+	C2D_TextParse(&dynText_passengers, g_dynamicBuf, buf4);
 	C2D_TextParse(&dynText_time, g_dynamicBuf, buf6);
 
 	C2D_TextOptimize(&dynText_lifes);
 	C2D_TextOptimize(&dynText_points);
 	C2D_TextOptimize(&dynText_levels);
-	C2D_TextOptimize(&dynText_passengers);
 	C2D_TextOptimize(&dynText_fuel);
+	C2D_TextOptimize(&dynText_passengers);
 	C2D_TextOptimize(&dynText_time);
 
-	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor, 16.0f, 110.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor, 16.0f, 130.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 16.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 16.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 16.0f, 190.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 90.0f, 116.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 91.0f, 136.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 263.0f, 115.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 258.0f, 130.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 261.0f, 145.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 129.0f, 215.0f, 0.5f, size, size, WHITE);
 }
 
 /* System Functions */
 void sceneInit_bottom()
 {
-	// Create two text buffers: one for static text, and another one for
-	// dynamic text - the latter will be cleared at each frame.
-	g_staticBuf = C2D_TextBufNew(4096); // support up to 4096 glyphs in the buffer
+	// Create one buffers: one for dynamic text, it'll be cleared at each frame.
 	g_dynamicBuf = C2D_TextBufNew(4096);
-
-	// Parse the static text strings
-	C2D_TextParse(&g_staticText[0], g_staticBuf, "Lifeboats!");
-
-	// Optimize the static text strings
-	C2D_TextOptimize(&g_staticText[0]);
 }
 
 void scenesExit()
@@ -644,6 +660,7 @@ void scenesExit()
 	C2D_SpriteSheetFree(sharpedo_spriteSheet);
 	C2D_SpriteSheetFree(coastguard_spriteSheet);
 	C2D_SpriteSheetFree(sea_spriteSheet);
+	C2D_SpriteSheetFree(coastguard_spriteSheet);
 }
 
 /* Game Controllers */
@@ -717,6 +734,7 @@ int main(int argc, char *argv[])
 
 	// Initialize sprites for Structures
 	init_sea();
+	init_scoreboard();
 	init_castaways();
 	init_sharpedo();
 	init_coastguardship();
@@ -798,7 +816,8 @@ int main(int argc, char *argv[])
 			/* Bottom Screen */
 			C2D_TargetClear(bottom, BLACK);
 			C2D_SceneBegin(bottom);
-			drawer_scoreboard(FONT_SIZE);
+			drawer_scoreboard();
+			drawer_dynamic_score(FONT_SIZE);
 
 			C3D_FrameEnd(0); // Finish render the scene
 		}

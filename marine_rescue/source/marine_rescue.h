@@ -35,7 +35,7 @@
 #define BOAT_LIFES 3
 #define BOAT_SPEED 2
 #define BOAT_SEAT_COUNT 0
-#define BOAT_FUEL_RECHARGE 15
+#define BOAT_FUEL_RECHARGE 20
 #define BOAT_FUEL_CONSUMPTION 1
 #define BOAT_TOP_SCREEN_WIDTH 380
 #define BOAT_TOP_SCREEN_HEIGHT 220
@@ -116,13 +116,6 @@ typedef struct
     int seatcount;
 } Lifeboat;
 
-// Sea sprite struct
-typedef struct
-{
-    C2D_Sprite spr;
-    float dx, dy; // velocity
-} Sea;
-
 // Sharpedo sprite struct
 typedef struct
 {
@@ -133,15 +126,34 @@ typedef struct
     bool stalking;
 } Sharpedo;
 
+// Sea sprite struct
+typedef struct
+{
+    C2D_Sprite spr;
+    float dx, dy; // velocity
+} Sea;
+
+// Scoreboard sprite struct
+typedef struct
+{
+    C2D_Sprite spr;
+    float dx, dy; // velocity
+} Scoreboard;
+
 /** Function signatures **/
 
 /* Initializer Functions */
 void init_sprites();
-void init_sea();
+
+// Characters
 void init_castaways();
 void init_sharpedo();
 void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y);
 void init_coastguardship();
+
+// Screens
+void init_sea();
+void init_scoreboard();
 
 /* Motion Functions */
 void moveSprites_castaways();
@@ -172,12 +184,18 @@ void collisionCastaway_Coastguardship();
 void collisionSharpedo_Coastguardship();
 
 /* Drawer Functions */
-void drawer_sea();
+
+// Characters
+
 void drawer_castaways();
 void drawer_sharpedo();
 void drawer_lifeboat();
 void drawer_coastguardship();
-void drawer_scoreboard(float size);
+
+// Screens
+void drawer_sea();
+void drawer_scoreboard();
+void drawer_dynamic_score(float size);
 
 /* System Functions */
 void sceneInit_bottom();
