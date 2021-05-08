@@ -37,7 +37,7 @@
 #define BOAT_SEAT_COUNT 0
 #define BOAT_FUEL_RECHARGE 15
 #define BOAT_FUEL_CONSUMPTION 1
-#define BOAT_TOP_SCREEN_WIDTH 392
+#define BOAT_TOP_SCREEN_WIDTH 380
 #define BOAT_TOP_SCREEN_HEIGHT 220
 
 // Sharpedos Variables
@@ -71,6 +71,19 @@ typedef enum
     INITIAL_TIME_STATE, // 0
     TIME_CONTINUITY     // 1
 } time_state;
+
+typedef enum
+{
+    NORTH_LIFEBOAT1,     // 0
+    NORTHEAST_LIFEBOAT2, // 1
+    EAST_LIFEBOAT3,      // 2
+    SOUTHEAST_LIFEBOAT4, // 3
+    SOUTH_LIFEBOAT5,     // 4
+    SOUTHWEST_LIFEBOAT6, // 5
+    WEST_LIFEBOAT7,      // 6
+    NORTHWEST_LIFEBOAT8  // 7
+
+} lifeboat_sprites;
 
 /* Structures */
 

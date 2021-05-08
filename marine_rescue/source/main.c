@@ -7,6 +7,7 @@ int game_status = START_GAMESTATE;
 int points = START_POINTS;
 int level = START_LEVEL;
 int lb_speedometer = START_SPEEDOMETER;
+int last_pos_x, last_pos_y;
 
 /* Time Variables */
 time_t current_epoch_time, initial_second, game_time, next_spawn, next_fuel_consumption;
@@ -147,6 +148,20 @@ void init_coastguardship()
 	cgship->dy = 0;
 }
 
+/* Sprite Controller */
+void controllerSprites_lifeboat(int sprite_id)
+{
+	// Saved last lifeboat position
+	last_pos_x = lboat->spr.params.pos.x;
+	last_pos_y = lboat->spr.params.pos.y;
+
+	// Sprite
+	C2D_SpriteFromSheet(&lboat->spr, coastguard_spriteSheet, sprite_id);
+	C2D_SpriteSetCenter(&lboat->spr, 0.5f, 0.5f);
+	C2D_SpriteSetPos(&lboat->spr, last_pos_x, last_pos_y);
+	C2D_SpriteSetRotationDegrees(&lboat->spr, 0);
+}
+
 /* Motion Functions */
 void moveSprites_castaways()
 {
@@ -206,7 +221,7 @@ void moveSprite_coastguardship()
 		cgship->dx = -cgship->dx;
 	}
 
-	// Check if a new lifeboat is needed as long as the coast guard boat is in the visible sea.
+	// Check if a new lifeboat is needed as long as the coast guard ship is in the visible sea.
 	if ((lboat->alive == false) && ((cgship->spr.params.pos.x / 2.0f <= TOP_SCREEN_WIDTH - cgship->spr.params.pos.x / 2.0f) && cgship->spr.params.pos.x / 2.0f >= 0.0f))
 	{
 		init_lifeboat(lboat->lifes, true, cgship->spr.params.pos.x, cgship->spr.params.pos.y - lboat->spr.params.pos.h);
@@ -218,7 +233,7 @@ void moveSprite_Lifeboat()
 	if ((lboat->alive == true))
 	{
 		// Move sprite on X axis while is on the screen
-		if (lboat->spr.params.pos.x < BOAT_TOP_SCREEN_WIDTH && lboat->spr.params.pos.x >= 9)
+		if (lboat->spr.params.pos.x < BOAT_TOP_SCREEN_WIDTH && lboat->spr.params.pos.x >= 20)
 		{
 			C2D_SpriteMove(&lboat->spr, lboat->dx, 0);
 		}
@@ -259,25 +274,50 @@ void moveLifeboatController(u32 kHeld)
 {
 	if (lboat->alive == true && lboat->fuel > 0)
 	{
-		//UP
+		// NORTH
 		if (kHeld & KEY_UP)
 		{
 			lboat->dy += -lboat->speed;
+			controllerSprites_lifeboat(NORTH_LIFEBOAT1);
 		}
-		// //DOWN
+		// SOUTH
 		if (kHeld & KEY_DOWN)
 		{
 			lboat->dy += lboat->speed;
+			controllerSprites_lifeboat(SOUTH_LIFEBOAT5);
 		}
-		//LEFT
+		// WEST
 		if (kHeld & KEY_LEFT)
 		{
 			lboat->dx += -lboat->speed;
+			controllerSprites_lifeboat(WEST_LIFEBOAT7);
 		}
-		//RIGHT
+		// EAST
 		if (kHeld & KEY_RIGHT)
 		{
 			lboat->dx += lboat->speed;
+			controllerSprites_lifeboat(EAST_LIFEBOAT3);
+		}
+
+		// NORTHEAST
+		if ((kHeld & KEY_UP) && (kHeld & KEY_RIGHT))
+		{
+			controllerSprites_lifeboat(NORTHEAST_LIFEBOAT2);
+		}
+		// NORTHWEST
+		if ((kHeld & KEY_UP) && (kHeld & KEY_LEFT))
+		{
+			controllerSprites_lifeboat(NORTHWEST_LIFEBOAT8);
+		}
+		// SOUTEAST
+		if ((kHeld & KEY_DOWN) && (kHeld & KEY_RIGHT))
+		{
+			controllerSprites_lifeboat(SOUTHEAST_LIFEBOAT4);
+		}
+		// SOUTHWEST
+		if ((kHeld & KEY_DOWN) && (kHeld & KEY_LEFT))
+		{
+			controllerSprites_lifeboat(SOUTHWEST_LIFEBOAT6);
 		}
 	}
 }
