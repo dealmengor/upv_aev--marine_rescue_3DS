@@ -623,8 +623,8 @@ void drawer_scoreboard(float size)
 
 	snprintf(testbuf, sizeof(testbuf), "lboat.x: %d ", (int)lboat->spr.params.pos.x);
 	snprintf(testbuf2, sizeof(testbuf2), "lboat.y: %d ", (int)lboat->spr.params.pos.y);
-	snprintf(testbuf3, sizeof(testbuf3), "lboat.last_x: %d ", (int)last_pos_x);
-	snprintf(testbuf4, sizeof(testbuf4), "lboat.last_y: %d ", (int)last_pos_y);
+	snprintf(testbuf3, sizeof(testbuf3), "lboat.w: %d ", (int)lboat->spr.params.pos.w);
+	snprintf(testbuf4, sizeof(testbuf4), "lboat.h: %d ", (int)lboat->spr.params.pos.h);
 
 	C2D_TextParse(&t, g_dynamicBuf, testbuf);
 	C2D_TextParse(&t2, g_dynamicBuf, testbuf2);
