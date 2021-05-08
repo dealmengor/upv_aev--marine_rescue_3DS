@@ -300,7 +300,24 @@ void bounceSharpedo_Coastguardship(Sharpedo *sharpedo)
 
 void bounceCoastGuardShip_Lifeboat()
 {
-	// lboat->speed = -lboat->speed;
+	//Lifeboat Fuel Recharge
+	lboat->fuel = BOAT_FUEL_RECHARGE;
+
+	// Validate if there're passengers on the boat
+	if (lboat->seatcount > 0)
+	{
+		//Increase Points
+		for (size_t i = 0; i < lboat->seatcount; i++)
+		{
+			points += RESCUE_POINTS;
+			castawaysaved += 1;
+			if (points % NEXT_LEVEL == 0)
+			{
+				gameStatusController(LEVEL_UP_GAMESTATE); //LEVEL UP!
+			}
+		}
+		lboat->seatcount = 0;
+	}
 }
 
 /* Lifeboat Controllers */
@@ -430,30 +447,29 @@ void collisionCoastGuardShip_Lifeboat()
 	if (lboat->alive == true)
 	{
 		// Collision Check
-		if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 50.0f &&
-			abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 50.0f)
+		if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) < 60.0f &&
+			abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 13.0f)
 		{
-			//Lifeboat Fuel Recharge
-			lboat->fuel = BOAT_FUEL_RECHARGE;
-
-			// Validate if there're passengers on the boat
-			if (lboat->seatcount > 0)
-			{
-				//Increase Points
-				for (size_t i = 0; i < lboat->seatcount; i++)
-				{
-					points += RESCUE_POINTS;
-					castawaysaved += 1;
-					if (points % NEXT_LEVEL == 0)
-					{
-						gameStatusController(LEVEL_UP_GAMESTATE); //LEVEL UP!
-					}
-				}
-				lboat->seatcount = BOAT_SEAT_COUNT;
-			}
-
 			// Bounce
 			bounceCoastGuardShip_Lifeboat();
+			//LEFT SHIP
+			C2D_SpriteMove(&lboat->spr, -lboat->speed, 0);
+		}
+		else if (cgship->spr.params.pos.x - lboat->spr.params.pos.x == -60.0f &&
+				 abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 13.0f)
+		{
+			// Bounce
+			bounceCoastGuardShip_Lifeboat();
+			//RIGTH SHIP
+			C2D_SpriteMove(&lboat->spr, lboat->speed, 0);
+		}
+		else if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) <= 50.0f &&
+				 abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) <= 30.0f)
+		{
+			// Bounce
+			bounceCoastGuardShip_Lifeboat();
+			//UPPER SHIP
+			C2D_SpriteMove(&lboat->spr, 0, -lboat->speed);
 		}
 	}
 }
@@ -533,12 +549,12 @@ void drawer_scoreboard(float size)
 	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE], buf5[BUFFER_SIZE], buf6[BUFFER_SIZE];
 	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers, dynText_fuel, dynText_time;
 
-	snprintf(buf, sizeof(buf), "Vidas: %d ", lboat->lifes);
-	snprintf(buf2, sizeof(buf2), "Puntos: %d ", points);
-	snprintf(buf3, sizeof(buf3), "Nivel: %d ", level);
-	snprintf(buf4, sizeof(buf4), "Pasajeros: %d / 3", lboat->seatcount);
-	snprintf(buf5, sizeof(buf5), "Combustible: %d / 15", lboat->fuel);
-	snprintf(buf6, sizeof(buf6), "Tiempo: %s ", time_buf);
+	snprintf(buf, sizeof(buf), "Lifes: %d ", lboat->lifes);
+	snprintf(buf2, sizeof(buf2), "Points: %d ", points);
+	snprintf(buf3, sizeof(buf3), "Level: %d ", level);
+	snprintf(buf4, sizeof(buf4), "Passengers: %d / 3", lboat->seatcount);
+	snprintf(buf5, sizeof(buf5), "Fuel: %d / 15", lboat->fuel);
+	snprintf(buf6, sizeof(buf6), "Time: %s ", time_buf);
 
 	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
 	C2D_TextParse(&dynText_points, g_dynamicBuf, buf2);
