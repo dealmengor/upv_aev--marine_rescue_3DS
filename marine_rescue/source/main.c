@@ -29,7 +29,7 @@ Lifeboat *lboat = &lifeboat;
 CoastGuardShip *cgship = &coastguardship;
 
 // TOP Screens
-static Screen game_title, sea;
+static Screen game_title, sea, game_over;
 
 // Bottom Screens
 static Screen menu, scoreboard, pause;
@@ -163,6 +163,16 @@ void init_sea_screen()
 	Screen *sprite = &sea;
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 5);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
+void init_game_over_screen()
+{
+	Screen *sprite = &game_over;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 8);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
 	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
 	sprite->dy = 1.0f;
@@ -477,7 +487,6 @@ void spawnNewSharpedo()
 // 	{
 // 		Shark *shark = &sharpedos[i];
 // 		Shark *shark2 = &sharpedos[i];
-
 // 		if (abs(shark->spr.params.pos.x - shark2[i].spr.params.pos.x) < 20.0f &&
 // 			abs(shark->spr.params.pos.y - shark2[i].spr.params.pos.y) < 20.0f)
 // 		// &&shark->id != shark2[i].id
@@ -597,7 +606,6 @@ void collisionSharpedo_Coastguardship()
 }
 
 /* Drawer Functions */
-// Important to draw screens first and then the characters.
 
 // Characters
 void drawer_castaways()
@@ -642,6 +650,11 @@ void drawer_game_title_screen()
 void drawer_sea_screen()
 {
 	C2D_DrawSprite(&sea.spr);
+}
+
+void drawer_game_over_screen()
+{
+	C2D_DrawSprite(&game_over.spr);
 }
 
 // Bottom Screens
@@ -845,6 +858,7 @@ void gameInitController()
 	// TOP Screens
 	init_game_title_screen();
 	init_sea_screen();
+	init_game_over_screen();
 
 	// Bottom Screens
 	init_menu_screen();
@@ -875,6 +889,7 @@ void gameDrawersTopScreenController(int game_sentinel)
 {
 	if (game_sentinel == START_GAMESTATE || game_sentinel == PAUSED_GAMESTATE)
 	{
+		// Important to draw screens first and then the characters
 		drawer_sea_screen();
 		drawer_castaways();
 		drawer_sharpedos();
@@ -885,11 +900,15 @@ void gameDrawersTopScreenController(int game_sentinel)
 	{
 		drawer_game_title_screen();
 	}
+	else if (game_sentinel == GAMEOVER_GAMESTATE)
+	{
+		drawer_game_over_screen();
+	}
 }
 
 void gameDrawersBottomScreenController(int game_sentinel)
 {
-	if (game_sentinel == START_GAMESTATE)
+	if (game_sentinel == START_GAMESTATE || game_sentinel == GAMEOVER_GAMESTATE)
 	{
 		drawer_scoreboard_screen();
 		drawer_dynamic_score(FONT_SIZE);
