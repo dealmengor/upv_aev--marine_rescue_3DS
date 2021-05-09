@@ -40,12 +40,7 @@ static C2D_SpriteSheet sharpedo_spriteSheet;
 static C2D_SpriteSheet screens_spriteSheet;
 
 /* C2D_Text Declaration Variables */
-<<<<<<< HEAD
-C2D_TextBuf g_staticBuf, g_dynamicBuf;	  // Buffers Declaratation
-C2D_Text g_staticText[STATIC_TEXT_COUNT]; // Array for Static Text
-=======
 C2D_TextBuf g_dynamicBuf; // Buffer Declaratation
->>>>>>> be4ea39e5304ee2c3b6dce7f94a3893e5249f989
 
 /* Initializer Functions */
 void init_sprites()
@@ -586,6 +581,38 @@ void collisionSharpedo_Coastguardship()
 /* Drawer Functions */
 // Important to draw screens first and then the characters.
 
+// Characters
+void drawer_castaways()
+{
+	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
+	{
+		Castaway *castaway = &castaways[i];
+		if (castaway->visible == true)
+			C2D_DrawSprite(&castaways[i].spr);
+	}
+}
+
+void drawer_sharpedos()
+{
+	for (size_t i = 0; i < sharpedocount; i++)
+	{
+		Sharpedo *sharpedo = &sharpedos[i];
+		if (sharpedo->stalking == false)
+			C2D_DrawSprite(&sharpedos[i].spr);
+	}
+}
+
+void drawer_lifeboat()
+{
+	if (lboat->alive == true)
+		C2D_DrawSprite(&lifeboat.spr);
+}
+
+void drawer_coastguardship()
+{
+	C2D_DrawSprite(&coastguardship.spr);
+}
+
 // Screens
 void drawer_sea_screen()
 {
@@ -638,38 +665,6 @@ void drawer_dynamic_score(float size)
 void drawer_pause_screen()
 {
 	C2D_DrawSprite(&pause.spr);
-}
-
-// Characters
-void drawer_castaways()
-{
-	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
-	{
-		Castaway *castaway = &castaways[i];
-		if (castaway->visible == true)
-			C2D_DrawSprite(&castaways[i].spr);
-	}
-}
-
-void drawer_sharpedos()
-{
-	for (size_t i = 0; i < sharpedocount; i++)
-	{
-		Sharpedo *sharpedo = &sharpedos[i];
-		if (sharpedo->stalking == false)
-			C2D_DrawSprite(&sharpedos[i].spr);
-	}
-}
-
-void drawer_lifeboat()
-{
-	if (lboat->alive == true)
-		C2D_DrawSprite(&lifeboat.spr);
-}
-
-void drawer_coastguardship()
-{
-	C2D_DrawSprite(&coastguardship.spr);
 }
 
 /* System Functions */
@@ -808,8 +803,8 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 
 void gameInitController()
 {
-	init_sea();
-	init_scoreboard();
+	init_sea_screen();
+	init_scoreboard_screen();
 	init_castaways();
 	init_sharpedo();
 	init_coastguardship();
@@ -839,7 +834,7 @@ void gameDrawersTopScreenController(int game_sentinel)
 {
 	if (game_sentinel == START_GAMESTATE || game_sentinel == PAUSED_GAMESTATE)
 	{
-		drawer_sea();
+		drawer_sea_screen();
 		drawer_castaways();
 		drawer_sharpedos();
 		drawer_lifeboat();
@@ -851,7 +846,7 @@ void gameDrawersBottomScreenController(int game_sentinel)
 {
 	if (game_sentinel == START_GAMESTATE || game_sentinel == PAUSED_GAMESTATE)
 	{
-		drawer_scoreboard();
+		drawer_scoreboard_screen();
 		drawer_dynamic_score(FONT_SIZE);
 	}
 }
@@ -875,27 +870,10 @@ int main(int argc, char *argv[])
 	init_sprites();
 
 	// Initialize sprites for Structures
-<<<<<<< HEAD
 	gameInitController();
 
 	// Initialize the scene for Scoreboard
 	sceneInit();
-=======
-
-	// Characters
-	init_castaways();
-	init_sharpedo();
-	init_coastguardship();
-	init_lifeboat(BOAT_LIFES, false, 0, 0);
-
-	// Screens
-	init_sea_screen();
-	init_scoreboard_screen();
-	init_pause_screen();
-
-	// Initialize the scene for the bottom screens
-	sceneInit_bottom();
->>>>>>> be4ea39e5304ee2c3b6dce7f94a3893e5249f989
 
 	// Main loop
 	while (aptMainLoop())
@@ -941,7 +919,6 @@ int main(int argc, char *argv[])
 		/* Start Render the scene for both screens */
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 
-<<<<<<< HEAD
 		/* TOP Screen */
 		C2D_TargetClear(top, BLACK);
 		C2D_SceneBegin(top);
@@ -960,55 +937,6 @@ int main(int argc, char *argv[])
 
 		/* Finish render the scene */
 		C3D_FrameEnd(0);
-=======
-			// D-PAD Controller
-			if (kHeld & KEY_UP || kHeld & KEY_DOWN || kHeld & KEY_LEFT || kHeld & KEY_RIGHT)
-				moveLifeboatController(kHeld);
-
-			// Move sprites
-			moveSprites_castaways();
-			moveSprites_sharpedos();
-			moveSprite_Lifeboat();
-			moveSprite_coastguardship();
-
-			// Collision Detectors
-			// collisionSharpedo_Sharpedo();
-			collisionSharpedo_Castaway();
-			collisionSharpedo_Lifeboat();
-			collisionSharpedo_Coastguardship();
-			collisionCastaway_Lifeboat();
-			collisionCoastGuardShip_Lifeboat();
-			collisionCastaway_Coastguardship();
-
-			/* Start Render the scene */
-			C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-
-			/* TOP Screen */
-			C2D_TargetClear(top, BLACK);
-			C2D_SceneBegin(top);
-
-			// Screens
-			drawer_sea_screen();
-
-			//Drawer Sprites
-			// Characters
-			drawer_castaways();
-			drawer_sharpedos();
-			drawer_lifeboat();
-			drawer_coastguardship();
-
-			C2D_Flush(); // Ensures all 2D objects so far have been drawn.
-
-			/* Bottom Screen */
-			C2D_TargetClear(bottom, BLACK);
-			C2D_SceneBegin(bottom);
-			drawer_scoreboard_screen();
-			drawer_dynamic_score(FONT_SIZE);
-			// drawer_pause_screen();
-
-			C3D_FrameEnd(0); // Finish render the scene
-		}
->>>>>>> be4ea39e5304ee2c3b6dce7f94a3893e5249f989
 	}
 
 exit_main_loop:

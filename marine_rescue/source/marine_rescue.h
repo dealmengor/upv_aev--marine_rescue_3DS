@@ -131,20 +131,6 @@ typedef struct
     bool stalking;
 } Sharpedo;
 
-// // Sea sprite struct
-// typedef struct
-// {
-//     C2D_Sprite spr;
-//     float dx, dy; // velocity
-// } Sea;
-
-// // Scoreboard sprite struct
-// typedef struct
-// {
-//     C2D_Sprite spr;
-//     float dx, dy; // velocity
-// } Scoreboard;
-
 // Screen sprites struct
 typedef struct
 {
@@ -157,25 +143,19 @@ typedef struct
 /* Initializer Functions */
 void init_sprites();
 
-// Screens
-void init_sea();
-void init_scoreboard();
-
 // Characters
 void init_castaways();
 void init_sharpedo();
 void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y);
 void init_coastguardship();
 
-<<<<<<< HEAD
-/* Sprites Controller */
-void controllerSprites_lifeboat(int sprite_id);
-=======
 // Screens
 void init_sea_screen();
 void init_scoreboard_screen();
 void init_pause_screen();
->>>>>>> be4ea39e5304ee2c3b6dce7f94a3893e5249f989
+
+/* Sprite Controller */
+void controllerSprites_lifeboat(int sprite_id);
 
 /* Motion Functions */
 void moveSprites_castaways();
