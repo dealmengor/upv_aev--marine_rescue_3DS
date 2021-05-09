@@ -28,10 +28,11 @@ static CoastGuardShip coastguardship;
 Lifeboat *lboat = &lifeboat;
 CoastGuardShip *cgship = &coastguardship;
 
-// Screens
-static Screen sea;
-static Screen scoreboard;
-static Screen pause;
+// TOP Screens
+static Screen game_title, sea;
+
+// Bottom Screens
+static Screen menu, scoreboard, pause;
 
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
@@ -144,7 +145,19 @@ void init_coastguardship()
 	cgship->dy = 0;
 }
 
-// Screens
+/* Screens */
+
+// TOP Screens
+void init_game_title_screen()
+{
+	Screen *sprite = &game_title;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 0);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
 void init_sea_screen()
 {
 	Screen *sprite = &sea;
@@ -155,6 +168,7 @@ void init_sea_screen()
 	sprite->dy = 1.0f;
 }
 
+// Bottom Screens
 void init_scoreboard_screen()
 {
 	Screen *sprite = &scoreboard;
@@ -170,6 +184,16 @@ void init_pause_screen()
 	Screen *sprite = &pause;
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 7);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
+void init_menu_screen()
+{
+	Screen *sprite = &menu;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 4);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
 	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
 	sprite->dy = 1.0f;
@@ -607,12 +631,20 @@ void drawer_coastguardship()
 	C2D_DrawSprite(&coastguardship.spr);
 }
 
-// Screens
+/* Screens */
+
+// TOP Screens
+void drawer_game_title_screen()
+{
+	C2D_DrawSprite(&game_title.spr);
+}
+
 void drawer_sea_screen()
 {
 	C2D_DrawSprite(&sea.spr);
 }
 
+// Bottom Screens
 void drawer_scoreboard_screen()
 {
 	C2D_DrawSprite(&scoreboard.spr);
@@ -659,6 +691,11 @@ void drawer_dynamic_score(float size)
 void drawer_pause_screen()
 {
 	C2D_DrawSprite(&pause.spr);
+}
+
+void drawer_menu_screen()
+{
+	C2D_DrawSprite(&menu.spr);
 }
 
 /* System Functions */
@@ -797,13 +834,22 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 
 void gameInitController()
 {
-	init_sea_screen();
-	init_scoreboard_screen();
-	init_pause_screen();
+	// Characters
 	init_castaways();
 	init_sharpedo();
 	init_coastguardship();
 	init_lifeboat(BOAT_LIFES, false, 0, 0);
+
+	/* Screens */
+
+	// TOP Screens
+	init_game_title_screen();
+	init_sea_screen();
+
+	// Bottom Screens
+	init_menu_screen();
+	init_scoreboard_screen();
+	init_pause_screen();
 }
 
 void gameMoveSpritesController()
@@ -835,6 +881,10 @@ void gameDrawersTopScreenController(int game_sentinel)
 		drawer_lifeboat();
 		drawer_coastguardship();
 	}
+	else if (game_sentinel == MENU_GAMESTATE)
+	{
+		drawer_game_title_screen();
+	}
 }
 
 void gameDrawersBottomScreenController(int game_sentinel)
@@ -847,6 +897,10 @@ void gameDrawersBottomScreenController(int game_sentinel)
 	else if (game_sentinel == PAUSED_GAMESTATE)
 	{
 		drawer_pause_screen();
+	}
+	else if (game_sentinel == MENU_GAMESTATE)
+	{
+		drawer_menu_screen();
 	}
 }
 

@@ -149,10 +149,16 @@ void init_sharpedo();
 void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y);
 void init_coastguardship();
 
-// Screens
+/* Screens */
+
+// TOP Screens
+void init_game_title_screen();
 void init_sea_screen();
+
+// Bottom Screens
 void init_scoreboard_screen();
 void init_pause_screen();
+void init_menu_screen();
 
 /* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id);
@@ -194,11 +200,17 @@ void drawer_sharpedo();
 void drawer_lifeboat();
 void drawer_coastguardship();
 
-// Screens
+/* Screens */
+
+// TOP Screens
+void drawer_game_title_screen();
 void drawer_sea_screen();
+
+// Bottom Screens
 void drawer_scoreboard_screen();
 void drawer_dynamic_score(float size);
 void drawer_pause_screen();
+void drawer_menu_screen();
 
 /* System Functions */
 void sceneInit_bottom();
