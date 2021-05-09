@@ -57,12 +57,6 @@ void init_sprites()
 		svcBreak(USERBREAK_PANIC);
 
 	// Screens
-	// screens_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sea.t3x");
-	// if (!screens_spriteSheet)
-	// 	svcBreak(USERBREAK_PANIC);
-	// scoreboard_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/screens.t3x");
-	// if (!scoreboard_spriteSheet)
-	// 	svcBreak(USERBREAK_PANIC);
 	screens_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/screens.t3x");
 	if (!screens_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
@@ -805,6 +799,7 @@ void gameInitController()
 {
 	init_sea_screen();
 	init_scoreboard_screen();
+	init_pause_screen();
 	init_castaways();
 	init_sharpedo();
 	init_coastguardship();
@@ -844,10 +839,14 @@ void gameDrawersTopScreenController(int game_sentinel)
 
 void gameDrawersBottomScreenController(int game_sentinel)
 {
-	if (game_sentinel == START_GAMESTATE || game_sentinel == PAUSED_GAMESTATE)
+	if (game_sentinel == START_GAMESTATE)
 	{
 		drawer_scoreboard_screen();
 		drawer_dynamic_score(FONT_SIZE);
+	}
+	else if (game_sentinel == PAUSED_GAMESTATE)
+	{
+		drawer_pause_screen();
 	}
 }
 
@@ -872,7 +871,7 @@ int main(int argc, char *argv[])
 	// Initialize sprites for Structures
 	gameInitController();
 
-	// Initialize the scene for Scoreboard
+	// Initialize the scene
 	sceneInit();
 
 	// Main loop
