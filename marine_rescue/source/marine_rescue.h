@@ -23,7 +23,7 @@
 #define START_LEVEL 1
 #define NEXT_LEVEL 100
 #define RESCUE_POINTS 10
-#define TIME_DIFFERENCE_QUANTITY 2
+#define TIME_DIFFERENCE_QUANTITY 3
 #define TIME_BUFFER_SIZE 80
 
 // Castaways Variables
@@ -71,8 +71,10 @@ typedef enum
 
 typedef enum
 {
-    INITIAL_TIME_STATE, // 0
-    TIME_CONTINUITY     // 1
+    INITIAL_TIME_STATE,  // 0
+    INTIAL_PAUSED_TIME,  // 1
+    TIME_CONTINUITY,     // 2
+    STOP_TIME_CONTINUITY // 3
 } time_state;
 
 typedef enum
@@ -191,8 +193,8 @@ void sceneInit_bottom();
 void scenesExit();
 
 /* Game Controllers */
-void gameStatusController(int sentinel);
-void gameTimeController(int time_sentinel);
+void gameStatusController(int game_sentinel, int time_sentinel);
+void gameTimeController(int time_sentinel, int game_sentinel);
 void gameInputController(int game_sentinel, u32 kDown, u32 kHeld);
 void gameInitController();
 void gameMoveSpritesController();

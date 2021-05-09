@@ -9,10 +9,10 @@ int level = START_LEVEL;
 int lb_speedometer = START_SPEEDOMETER;
 
 /* Time Variables */
-time_t current_epoch_time, initial_second, game_time, next_spawn, next_fuel_consumption;
-double diff_t[TIME_DIFFERENCE_QUANTITY];
-struct tm ts;					 //Time Structure
-char time_buf[TIME_BUFFER_SIZE]; //Buffer Convert from epoch to human-readable date
+time_t current_epoch_time, initial_second, current_initial_paused_time, last_paused_time, game_time, next_spawn, next_fuel_consumption;
+int diff_t[TIME_DIFFERENCE_QUANTITY]; //Save time differences
+struct tm ts;						  //Time Structure
+char time_buf[TIME_BUFFER_SIZE];	  //Buffer Convert from epoch to human-readable date
 
 /* Element Counters */
 int castawaycount = 0;
@@ -353,7 +353,7 @@ void bounceCoastGuardShip_Lifeboat()
 			castawaysaved += 1;
 			if (points % NEXT_LEVEL == 0)
 			{
-				gameStatusController(LEVEL_UP_GAMESTATE); //LEVEL UP!
+				gameStatusController(LEVEL_UP_GAMESTATE, TIME_CONTINUITY); //LEVEL UP!
 			}
 		}
 		lboat->seatcount = 0;
@@ -380,7 +380,7 @@ void lifeboatDeath(Lifeboat *lboat)
 		if (lboat->lifes == 0)
 		{
 			lboat->seatcount = BOAT_SEAT_COUNT;
-			gameStatusController(GAMEOVER_GAMESTATE);
+			gameStatusController(GAMEOVER_GAMESTATE, STOP_TIME_CONTINUITY);
 		}
 	}
 }
@@ -402,15 +402,19 @@ void spawnNewCastaway()
 
 void spawnNewSharpedo()
 {
-	//Check in the castaway array to restore the status of the elements.
-	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
+	if (game_status == LEVEL_UP_GAMESTATE)
 	{
-		Sharpedo *sharpedo = &sharpedos[i];
-		if (sharpedo->stalking == true)
+		//Check in the castaway array to restore the status of the elements.
+		for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 		{
-			sharpedo->stalking = false;
-			break;
+			Sharpedo *sharpedo = &sharpedos[i];
+			if (sharpedo->stalking == true)
+			{
+				sharpedo->stalking = false;
+				break;
+			}
 		}
+		gameStatusController(START_GAMESTATE, TIME_CONTINUITY);
 	}
 }
 
@@ -618,28 +622,32 @@ void drawer_scoreboard(float size)
 	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 16.0f, 210.0f, 0.5f, size, size, WHITE);
 
 	//TESTING
-	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE], testbuf4[BUFFER_SIZE];
-	C2D_Text t, t2, t3, t4;
+	char testbuf[BUFFER_SIZE], testbuf2[BUFFER_SIZE], testbuf3[BUFFER_SIZE], testbuf4[BUFFER_SIZE], testbuf5[BUFFER_SIZE];
+	C2D_Text t, t2, t3, t4, t5;
 
-	snprintf(testbuf, sizeof(testbuf), "lboat.x: %d ", (int)lboat->spr.params.pos.x);
-	snprintf(testbuf2, sizeof(testbuf2), "lboat.y: %d ", (int)lboat->spr.params.pos.y);
-	snprintf(testbuf3, sizeof(testbuf3), "lboat.w: %d ", (int)lboat->spr.params.pos.w);
-	snprintf(testbuf4, sizeof(testbuf4), "lboat.h: %d ", (int)lboat->spr.params.pos.h);
+	snprintf(testbuf, sizeof(testbuf), "diff1: %d, diff2:  %d", diff_t[1], diff_t[2]);
+	snprintf(testbuf2, sizeof(testbuf2), "current_epoch: %lld ", current_epoch_time);
+	snprintf(testbuf3, sizeof(testbuf3), "initial_paused: %lld ", current_initial_paused_time);
+	snprintf(testbuf4, sizeof(testbuf4), "initial_second: %lld ", initial_second);
+	snprintf(testbuf5, sizeof(testbuf5), "total_time_pause: %d ", diff_t[0]);
 
 	C2D_TextParse(&t, g_dynamicBuf, testbuf);
 	C2D_TextParse(&t2, g_dynamicBuf, testbuf2);
 	C2D_TextParse(&t3, g_dynamicBuf, testbuf3);
 	C2D_TextParse(&t4, g_dynamicBuf, testbuf4);
+	C2D_TextParse(&t5, g_dynamicBuf, testbuf5);
 
 	C2D_TextOptimize(&t);
 	C2D_TextOptimize(&t2);
 	C2D_TextOptimize(&t3);
 	C2D_TextOptimize(&t4);
+	C2D_TextOptimize(&t5);
 
-	C2D_DrawText(&t, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 130.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&t2, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 150.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&t3, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 170.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&t4, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 300.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 305.0f, 130.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t2, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 305.0f, 150.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t3, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 305.0f, 170.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t4, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 305.0f, 190.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&t5, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 305.0f, 210.0f, 0.5f, size, size, WHITE);
 }
 
 /* System Functions */
@@ -671,69 +679,99 @@ void scenesExit()
 }
 
 /* Game Controllers */
-void gameStatusController(int game_sentinel)
+void gameStatusController(int game_sentinel, int time_sentinel)
 {
 	switch (game_sentinel)
 	{
 	case EXIT_GAMESTATE:
 		game_status = EXIT_GAMESTATE;
 		break;
+
 	case START_GAMESTATE:
 		game_status = START_GAMESTATE;
+		gameTimeController(time_sentinel, game_status); // Start Stopwatch
 		break;
+
 	case NEW_GAMESTATE:
 		game_status = NEW_GAMESTATE;
 		break;
+
 	case PAUSED_GAMESTATE:
 		game_status = PAUSED_GAMESTATE;
+		gameTimeController(time_sentinel, game_status); // Record Start Pause time
+		break;
+
 	case LEVEL_UP_GAMESTATE:
+		game_status = LEVEL_UP_GAMESTATE;
 		level += 1;
 		spawnNewSharpedo();
-		game_status = LEVEL_UP_GAMESTATE;
 		break;
+
 	case GAMEOVER_GAMESTATE:
 		game_status = GAMEOVER_GAMESTATE;
 		break;
+
 	case WIN_GAMESTATE:
 		game_status = WIN_GAMESTATE;
 		break;
+
 	case MENU_GAMESTATE:
 		game_status = MENU_GAMESTATE;
 		break;
 	}
 }
 
-void gameTimeController(int time_sentinel)
+void gameTimeController(int time_sentinel, int game_sentinel)
 {
 	// Initialize the time variables
-	time(&current_epoch_time); // Get current EPOCH time from System
-	if (time_sentinel == INITIAL_TIME_STATE)
+	if ((time_sentinel == INITIAL_TIME_STATE) && (game_sentinel == START_GAMESTATE))
 	{
 		initial_second = time(&current_epoch_time);
-		next_spawn = current_epoch_time + CASTAWAY_SPAWN;					// Add 10 seconds to the next spawn
-		next_fuel_consumption = current_epoch_time + BOAT_FUEL_CONSUMPTION; // Add 2 seconds to the next fuel consumption
+		next_spawn = initial_second + CASTAWAY_SPAWN;					// Add 10 seconds to the next spawn
+		next_fuel_consumption = initial_second + BOAT_FUEL_CONSUMPTION; // Add 2 seconds to the next fuel consumption
+	}
+	else if ((time_sentinel == INTIAL_PAUSED_TIME) && (game_sentinel == PAUSED_GAMESTATE))
+	{
+		current_initial_paused_time = time(&current_epoch_time); // Get current EPOCH time from System
 	}
 	else
 	{
-		diff_t[0] = difftime(next_spawn, current_epoch_time);			 // Time Difference between current time and next_spawn
-		diff_t[1] = difftime(next_fuel_consumption, current_epoch_time); // Time Difference between current time and next_fuel_consumption
+		// Get current EPOCH time from System
+		time(&current_epoch_time);
+
+		/* Game Stopwatch */
+		if (current_initial_paused_time != 0 && current_initial_paused_time > last_paused_time)
+		{
+			diff_t[0] += difftime(current_epoch_time, current_initial_paused_time); // Total pause time
+			next_spawn = current_epoch_time + CASTAWAY_SPAWN - diff_t[2];
+			next_fuel_consumption = current_epoch_time + BOAT_FUEL_CONSUMPTION;
+			last_paused_time = current_initial_paused_time;
+		}
 
 		// Calculate elapsed time
-		game_time = current_epoch_time - initial_second;
-
+		game_time = current_epoch_time - initial_second - diff_t[0];
 		// Format time, "hh:mm:ss"
 		ts = *localtime(&game_time);
 		strftime(time_buf, sizeof(time_buf), "%H:%M:%S", &ts);
+
+		/* Spawn mechanics */
+		// Time Differences between current epoch time, next_spawn and next_fuel_consumption
+		diff_t[1] = difftime(next_spawn, current_epoch_time);
+		diff_t[2] = difftime(next_fuel_consumption, current_epoch_time);
 	}
 }
 
 void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 {
-	// Start Game
+	// General GAMESTATE Control
+	if ((kDown & KEY_L) && (kDown & KEY_R))
+		gameStatusController(EXIT_GAMESTATE, STOP_TIME_CONTINUITY); // Break in order to return to hbmenu
+
+	// Menu GAMESTATE Controls
 	if (game_sentinel == MENU_GAMESTATE)
 	{
 		if (kDown & KEY_START)
-			gameStatusController(START_GAMESTATE);
+			gameStatusController(START_GAMESTATE, INITIAL_TIME_STATE);
 	}
 
 	// START GAMESTATE Controls
@@ -742,15 +780,17 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 		// D-PAD Controller
 		if (kHeld & KEY_UP || kHeld & KEY_DOWN || kHeld & KEY_LEFT || kHeld & KEY_RIGHT)
 			moveLifeboatController(kHeld);
-
-		// Pause the Game
+		// Pause Game
 		if (kDown & KEY_SELECT)
-			gameStatusController(PAUSED_GAMESTATE);
+			gameStatusController(PAUSED_GAMESTATE, INTIAL_PAUSED_TIME);
 	}
 
-	// Break in order to return to hbmenu
-	if ((kDown & KEY_L) && (kDown & KEY_R))
-		gameStatusController(EXIT_GAMESTATE);
+	// Pause GAMESTATE Controls
+	if (game_sentinel == PAUSED_GAMESTATE)
+	{
+		if (kDown & KEY_SELECT)
+			gameStatusController(START_GAMESTATE, INTIAL_PAUSED_TIME);
+	}
 }
 
 void gameInitController()
@@ -783,7 +823,7 @@ void gameCollisionsController()
 
 void gameDrawersTopScreenController(int game_sentinel)
 {
-	if (game_sentinel == START_GAMESTATE)
+	if (game_sentinel == START_GAMESTATE || game_sentinel == PAUSED_GAMESTATE)
 	{
 		drawer_sea();
 		drawer_castaways();
@@ -795,8 +835,8 @@ void gameDrawersTopScreenController(int game_sentinel)
 
 void gameDrawersBottomScreenController(int game_sentinel)
 {
-	if (game_sentinel == START_GAMESTATE)
-		drawer_scoreboard(FONT_SIZE);
+	// if (game_sentinel == START_GAMESTATE || game_sentinel == PAUSED_GAMESTATE)
+	drawer_scoreboard(FONT_SIZE);
 }
 
 /* Main Function */
@@ -809,9 +849,6 @@ int main(int argc, char *argv[])
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 	C2D_Prepare();
 	srand(time(NULL)); // Sets a seed for random numbers
-
-	// Init Timer
-	gameTimeController(INITIAL_TIME_STATE);
 
 	// Create screens
 	C3D_RenderTarget *top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
@@ -839,26 +876,25 @@ int main(int argc, char *argv[])
 		gameInputController(game_status, kDown, kHeld);
 
 		// General Game Status Validatation
-		if (game_status == LEVEL_UP_GAMESTATE)
+		if (game_status == EXIT_GAMESTATE)
 			goto exit_main_loop; // Close game
-
-		if (game_status == PAUSED_GAMESTATE)
-			getchar(); // Pause game
 
 		if (game_status == START_GAMESTATE)
 		{
+
 			/* Time Controller */
-			gameTimeController(TIME_CONTINUITY);
+			gameTimeController(TIME_CONTINUITY, game_status);
 
 			// Time mechanics
-			if (diff_t[0] == 0)
+			if (diff_t[1] == 0)
 			{
 				spawnNewCastaway();
 				next_spawn = current_epoch_time + CASTAWAY_SPAWN;
 			}
-			if (diff_t[1] == 0 && lboat->fuel > 0)
+			if (diff_t[2] == 0)
 			{
-				lboat->fuel -= BOAT_FUEL_CONSUMPTION;
+				if (lboat->fuel > 0)
+					lboat->fuel -= BOAT_FUEL_CONSUMPTION;
 				next_fuel_consumption = current_epoch_time + BOAT_FUEL_CONSUMPTION;
 			}
 
@@ -877,14 +913,7 @@ int main(int argc, char *argv[])
 		C2D_SceneBegin(top);
 
 		//Drawer TOP Sprites
-		if (game_status == START_GAMESTATE)
-		{
-			gameDrawersTopScreenController(START_GAMESTATE);
-		}
-		else
-		{
-			gameDrawersTopScreenController(MENU_GAMESTATE);
-		}
+		gameDrawersTopScreenController(game_status);
 
 		C2D_Flush(); // Ensures all 2D objects so far have been drawn.
 
@@ -893,14 +922,7 @@ int main(int argc, char *argv[])
 		C2D_SceneBegin(bottom);
 
 		//Drawer BOTTOM Sprites
-		if (game_status == START_GAMESTATE)
-		{
-			gameDrawersBottomScreenController(START_GAMESTATE);
-		}
-		else
-		{
-			gameDrawersBottomScreenController(MENU_GAMESTATE);
-		}
+		gameDrawersBottomScreenController(game_status);
 
 		/* Finish render the scene */
 		C3D_FrameEnd(0);
