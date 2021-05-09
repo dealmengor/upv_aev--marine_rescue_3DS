@@ -131,19 +131,26 @@ typedef struct
     bool stalking;
 } Sharpedo;
 
-// Sea sprite struct
-typedef struct
-{
-    C2D_Sprite spr;
-    float dx, dy; // velocity
-} Sea;
+// // Sea sprite struct
+// typedef struct
+// {
+//     C2D_Sprite spr;
+//     float dx, dy; // velocity
+// } Sea;
 
-// Scoreboard sprite struct
+// // Scoreboard sprite struct
+// typedef struct
+// {
+//     C2D_Sprite spr;
+//     float dx, dy; // velocity
+// } Scoreboard;
+
+// Screen sprites struct
 typedef struct
 {
     C2D_Sprite spr;
     float dx, dy; // velocity
-} Scoreboard;
+} Screen;
 
 /** Function signatures **/
 
@@ -160,8 +167,15 @@ void init_sharpedo();
 void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y);
 void init_coastguardship();
 
+<<<<<<< HEAD
 /* Sprites Controller */
 void controllerSprites_lifeboat(int sprite_id);
+=======
+// Screens
+void init_sea_screen();
+void init_scoreboard_screen();
+void init_pause_screen();
+>>>>>>> be4ea39e5304ee2c3b6dce7f94a3893e5249f989
 
 /* Motion Functions */
 void moveSprites_castaways();
@@ -195,16 +209,16 @@ void collisionSharpedo_Coastguardship();
 /* Drawer Functions */
 
 // Characters
-
 void drawer_castaways();
 void drawer_sharpedo();
 void drawer_lifeboat();
 void drawer_coastguardship();
 
 // Screens
-void drawer_sea();
-void drawer_scoreboard();
+void drawer_sea_screen();
+void drawer_scoreboard_screen();
 void drawer_dynamic_score(float size);
+void drawer_pause_screen();
 
 /* System Functions */
 void sceneInit_bottom();

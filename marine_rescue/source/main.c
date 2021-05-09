@@ -22,24 +22,30 @@ int castawaysaved = 0;
 /*Structures & Data Structures Declaratation*/
 static Castaway castaways[MAX_CASTAWAYS];
 static Sharpedo sharpedos[MAX_SHARPEDOS];
-static Sea sea;
-static Scoreboard scoreboard;
 static Lifeboat lifeboat;
 static CoastGuardShip coastguardship;
 
 Lifeboat *lboat = &lifeboat;
 CoastGuardShip *cgship = &coastguardship;
 
+// Screens
+static Screen sea;
+static Screen scoreboard;
+static Screen pause;
+
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
 static C2D_SpriteSheet coastguard_spriteSheet;
 static C2D_SpriteSheet sharpedo_spriteSheet;
-static C2D_SpriteSheet sea_spriteSheet;
-static C2D_SpriteSheet scoreboard_spriteSheet;
+static C2D_SpriteSheet screens_spriteSheet;
 
 /* C2D_Text Declaration Variables */
+<<<<<<< HEAD
 C2D_TextBuf g_staticBuf, g_dynamicBuf;	  // Buffers Declaratation
 C2D_Text g_staticText[STATIC_TEXT_COUNT]; // Array for Static Text
+=======
+C2D_TextBuf g_dynamicBuf; // Buffer Declaratation
+>>>>>>> be4ea39e5304ee2c3b6dce7f94a3893e5249f989
 
 /* Initializer Functions */
 void init_sprites()
@@ -56,34 +62,18 @@ void init_sprites()
 		svcBreak(USERBREAK_PANIC);
 
 	// Screens
-	sea_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sea.t3x");
-	if (!sea_spriteSheet)
+	// screens_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sea.t3x");
+	// if (!screens_spriteSheet)
+	// 	svcBreak(USERBREAK_PANIC);
+	// scoreboard_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/screens.t3x");
+	// if (!scoreboard_spriteSheet)
+	// 	svcBreak(USERBREAK_PANIC);
+	screens_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/screens.t3x");
+	if (!screens_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
-	scoreboard_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/screens.t3x");
-	if (!scoreboard_spriteSheet)
-		svcBreak(USERBREAK_PANIC);
 }
 
-void init_sea()
-{
-	Sea *sprite = &sea;
-	// Position, rotation and SPEED
-	C2D_SpriteFromSheet(&sprite->spr, sea_spriteSheet, 0);
-	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
-}
-
-void init_scoreboard()
-{
-	Scoreboard *sprite = &scoreboard;
-	// Position, rotation and SPEED
-	C2D_SpriteFromSheet(&sprite->spr, scoreboard_spriteSheet, 0);
-	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
-}
-
+// Characters
 void init_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
@@ -165,7 +155,38 @@ void init_coastguardship()
 	cgship->dy = 0;
 }
 
-/* Sprites Controller */
+// Screens
+void init_sea_screen()
+{
+	Screen *sprite = &sea;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 5);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
+void init_scoreboard_screen()
+{
+	Screen *sprite = &scoreboard;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 6);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
+void init_pause_screen()
+{
+	Screen *sprite = &pause;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 7);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
+/* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id)
 {
 	// Saved last lifeboat position
@@ -563,16 +584,63 @@ void collisionSharpedo_Coastguardship()
 }
 
 /* Drawer Functions */
-void drawer_sea()
+// Important to draw screens first and then the characters.
+
+// Screens
+void drawer_sea_screen()
 {
 	C2D_DrawSprite(&sea.spr);
 }
 
-void drawer_scoreboard()
+void drawer_scoreboard_screen()
 {
 	C2D_DrawSprite(&scoreboard.spr);
 }
 
+void drawer_dynamic_score(float size)
+{
+	// Clear the dynamic text buffer
+	C2D_TextBufClear(g_dynamicBuf);
+
+	// Generate and draw dynamic text
+	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE], buf5[BUFFER_SIZE], buf6[BUFFER_SIZE];
+	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers, dynText_fuel, dynText_time;
+
+	snprintf(buf, sizeof(buf), " %d", lboat->lifes);
+	snprintf(buf2, sizeof(buf2), " %d", points);
+	snprintf(buf3, sizeof(buf3), " %d", level);
+	snprintf(buf5, sizeof(buf5), " %d", lboat->fuel);
+	snprintf(buf4, sizeof(buf4), "%d/3", lboat->seatcount);
+	snprintf(buf6, sizeof(buf6), " %s", time_buf);
+
+	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
+	C2D_TextParse(&dynText_points, g_dynamicBuf, buf2);
+	C2D_TextParse(&dynText_levels, g_dynamicBuf, buf3);
+	C2D_TextParse(&dynText_fuel, g_dynamicBuf, buf5);
+	C2D_TextParse(&dynText_passengers, g_dynamicBuf, buf4);
+	C2D_TextParse(&dynText_time, g_dynamicBuf, buf6);
+
+	C2D_TextOptimize(&dynText_lifes);
+	C2D_TextOptimize(&dynText_points);
+	C2D_TextOptimize(&dynText_levels);
+	C2D_TextOptimize(&dynText_fuel);
+	C2D_TextOptimize(&dynText_passengers);
+	C2D_TextOptimize(&dynText_time);
+
+	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 90.0f, 116.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 91.0f, 136.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 268.0f, 115.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 268.0f, 130.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 261.0f, 145.0f, 0.5f, size, size, WHITE);
+	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 129.0f, 215.0f, 0.5f, size, size, WHITE);
+}
+
+void drawer_pause_screen()
+{
+	C2D_DrawSprite(&pause.spr);
+}
+
+// Characters
 void drawer_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
@@ -604,47 +672,6 @@ void drawer_coastguardship()
 	C2D_DrawSprite(&coastguardship.spr);
 }
 
-void drawer_dynamic_score(float size)
-{
-	// Clear the dynamic text buffer
-	C2D_TextBufClear(g_dynamicBuf);
-
-	// Draw static text strings
-	C2D_DrawText(&g_staticText[0], C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 150.0f, 25.0f, 0.5f, size, size, WHITE);
-
-	// Generate and draw dynamic text
-	char buf[BUFFER_SIZE], buf2[BUFFER_SIZE], buf3[BUFFER_SIZE], buf4[BUFFER_SIZE], buf5[BUFFER_SIZE], buf6[BUFFER_SIZE];
-	C2D_Text dynText_lifes, dynText_points, dynText_levels, dynText_passengers, dynText_fuel, dynText_time;
-
-	snprintf(buf, sizeof(buf), " %d", lboat->lifes);
-	snprintf(buf2, sizeof(buf2), " %d", points);
-	snprintf(buf3, sizeof(buf3), " %d", level);
-	snprintf(buf5, sizeof(buf5), " %d", lboat->fuel);
-	snprintf(buf4, sizeof(buf4), "%d/3", lboat->seatcount);
-	snprintf(buf6, sizeof(buf6), " %s", time_buf);
-
-	C2D_TextParse(&dynText_lifes, g_dynamicBuf, buf);
-	C2D_TextParse(&dynText_points, g_dynamicBuf, buf2);
-	C2D_TextParse(&dynText_levels, g_dynamicBuf, buf3);
-	C2D_TextParse(&dynText_fuel, g_dynamicBuf, buf5);
-	C2D_TextParse(&dynText_passengers, g_dynamicBuf, buf4);
-	C2D_TextParse(&dynText_time, g_dynamicBuf, buf6);
-
-	C2D_TextOptimize(&dynText_lifes);
-	C2D_TextOptimize(&dynText_points);
-	C2D_TextOptimize(&dynText_levels);
-	C2D_TextOptimize(&dynText_fuel);
-	C2D_TextOptimize(&dynText_passengers);
-	C2D_TextOptimize(&dynText_time);
-
-	C2D_DrawText(&dynText_levels, C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 90.0f, 116.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_points, C2D_AtBaseline | C2D_WithColor | C2D_AlignCenter, 91.0f, 136.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_lifes, C2D_AtBaseline | C2D_WithColor, 263.0f, 115.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_fuel, C2D_AtBaseline | C2D_WithColor, 258.0f, 130.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_passengers, C2D_AtBaseline | C2D_WithColor, 261.0f, 145.0f, 0.5f, size, size, WHITE);
-	C2D_DrawText(&dynText_time, C2D_AtBaseline | C2D_WithColor, 129.0f, 215.0f, 0.5f, size, size, WHITE);
-}
-
 /* System Functions */
 void sceneInit()
 {
@@ -656,14 +683,12 @@ void scenesExit()
 {
 	// Delete the text buffers
 	C2D_TextBufDelete(g_dynamicBuf);
-	C2D_TextBufDelete(g_staticBuf);
 
 	// Delete graphics
 	C2D_SpriteSheetFree(castaways_spriteSheet);
 	C2D_SpriteSheetFree(sharpedo_spriteSheet);
 	C2D_SpriteSheetFree(coastguard_spriteSheet);
-	C2D_SpriteSheetFree(sea_spriteSheet);
-	C2D_SpriteSheetFree(coastguard_spriteSheet);
+	C2D_SpriteSheetFree(screens_spriteSheet);
 }
 
 /* Game Controllers */
@@ -850,10 +875,27 @@ int main(int argc, char *argv[])
 	init_sprites();
 
 	// Initialize sprites for Structures
+<<<<<<< HEAD
 	gameInitController();
 
 	// Initialize the scene for Scoreboard
 	sceneInit();
+=======
+
+	// Characters
+	init_castaways();
+	init_sharpedo();
+	init_coastguardship();
+	init_lifeboat(BOAT_LIFES, false, 0, 0);
+
+	// Screens
+	init_sea_screen();
+	init_scoreboard_screen();
+	init_pause_screen();
+
+	// Initialize the scene for the bottom screens
+	sceneInit_bottom();
+>>>>>>> be4ea39e5304ee2c3b6dce7f94a3893e5249f989
 
 	// Main loop
 	while (aptMainLoop())
@@ -899,6 +941,7 @@ int main(int argc, char *argv[])
 		/* Start Render the scene for both screens */
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 
+<<<<<<< HEAD
 		/* TOP Screen */
 		C2D_TargetClear(top, BLACK);
 		C2D_SceneBegin(top);
@@ -917,6 +960,55 @@ int main(int argc, char *argv[])
 
 		/* Finish render the scene */
 		C3D_FrameEnd(0);
+=======
+			// D-PAD Controller
+			if (kHeld & KEY_UP || kHeld & KEY_DOWN || kHeld & KEY_LEFT || kHeld & KEY_RIGHT)
+				moveLifeboatController(kHeld);
+
+			// Move sprites
+			moveSprites_castaways();
+			moveSprites_sharpedos();
+			moveSprite_Lifeboat();
+			moveSprite_coastguardship();
+
+			// Collision Detectors
+			// collisionSharpedo_Sharpedo();
+			collisionSharpedo_Castaway();
+			collisionSharpedo_Lifeboat();
+			collisionSharpedo_Coastguardship();
+			collisionCastaway_Lifeboat();
+			collisionCoastGuardShip_Lifeboat();
+			collisionCastaway_Coastguardship();
+
+			/* Start Render the scene */
+			C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+
+			/* TOP Screen */
+			C2D_TargetClear(top, BLACK);
+			C2D_SceneBegin(top);
+
+			// Screens
+			drawer_sea_screen();
+
+			//Drawer Sprites
+			// Characters
+			drawer_castaways();
+			drawer_sharpedos();
+			drawer_lifeboat();
+			drawer_coastguardship();
+
+			C2D_Flush(); // Ensures all 2D objects so far have been drawn.
+
+			/* Bottom Screen */
+			C2D_TargetClear(bottom, BLACK);
+			C2D_SceneBegin(bottom);
+			drawer_scoreboard_screen();
+			drawer_dynamic_score(FONT_SIZE);
+			// drawer_pause_screen();
+
+			C3D_FrameEnd(0); // Finish render the scene
+		}
+>>>>>>> be4ea39e5304ee2c3b6dce7f94a3893e5249f989
 	}
 
 exit_main_loop:
