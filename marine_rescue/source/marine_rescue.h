@@ -23,7 +23,7 @@
 #define START_LEVEL 1
 #define NEXT_LEVEL 100
 #define RESCUE_POINTS 10
-#define TIME_DIFFERENCE_QUANTITY 2
+#define TIME_DIFFERENCE_QUANTITY 3
 #define TIME_BUFFER_SIZE 80
 
 // Castaways Variables
@@ -59,17 +59,22 @@
 /* Enumerated variables */
 typedef enum
 {
-    GAMEOVER_GAMESTATE, // 0
+    EXIT_GAMESTATE,     // 0
     START_GAMESTATE,    // 1
-    LEVEL_UP_GAMESTATE, // 2
-    NEW_GAMESTATE,      // 3
-    WIN_GAMESTATE       // 4
+    NEW_GAMESTATE,      // 2
+    PAUSED_GAMESTATE,   // 3
+    LEVEL_UP_GAMESTATE, // 4
+    GAMEOVER_GAMESTATE, // 5
+    WIN_GAMESTATE,      // 6
+    MENU_GAMESTATE      // 7
 } game_state;
 
 typedef enum
 {
-    INITIAL_TIME_STATE, // 0
-    TIME_CONTINUITY     // 1
+    INITIAL_TIME_STATE,  // 0
+    INTIAL_PAUSED_TIME,  // 1
+    TIME_CONTINUITY,     // 2
+    STOP_TIME_CONTINUITY // 3
 } time_state;
 
 typedef enum
@@ -145,15 +150,18 @@ typedef struct
 /* Initializer Functions */
 void init_sprites();
 
+// Screens
+void init_sea();
+void init_scoreboard();
+
 // Characters
 void init_castaways();
 void init_sharpedo();
 void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y);
 void init_coastguardship();
 
-// Screens
-void init_sea();
-void init_scoreboard();
+/* Sprites Controller */
+void controllerSprites_lifeboat(int sprite_id);
 
 /* Motion Functions */
 void moveSprites_castaways();
@@ -176,6 +184,7 @@ void spawnNewCastaway();
 void spawnNewSharpedo();
 
 /* Collision Functions */
+//void collisionSharpedo_Sharpedo();
 void collisionsharpedo_Castaway();
 void collisionsharpedo_Lifeboat();
 void collisionCastaway_Lifeboat();
@@ -200,4 +209,13 @@ void drawer_dynamic_score(float size);
 /* System Functions */
 void sceneInit_bottom();
 void scenesExit();
-void gameStatusController(int sentinel);
+
+/* Game Controllers */
+void gameStatusController(int game_sentinel, int time_sentinel);
+void gameTimeController(int time_sentinel, int game_sentinel);
+void gameInputController(int game_sentinel, u32 kDown, u32 kHeld);
+void gameInitController();
+void gameMoveSpritesController();
+void gameCollisionsController();
+void gameDrawersTopScreenController(int game_sentinel);
+void gameDrawersBottomScreenController(int game_sentinel);
