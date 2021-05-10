@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <3ds.h>
+#include "stb/stretchy_buffer.h"
 
 /* Defines */
 
@@ -138,6 +139,12 @@ typedef struct
     float dx, dy; // velocity
 } Screen;
 
+typedef struct
+{
+    char name[64];
+    int score;
+} player_score;
+
 /** Function signatures **/
 
 /* Initializer Functions */
@@ -161,8 +168,9 @@ void init_pause_screen();
 void init_menu_screen();
 void init_game_over_screen();
 
-/*Prompt dialog */
+/*Scoreboard System */
 void score_dialog();
+void save_score();
 
 /* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id);

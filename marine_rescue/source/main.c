@@ -36,7 +36,6 @@ static Screen menu, scoreboard, pause;
 
 /*Prompt dialog */
 int score_data;
-int score;
 
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
@@ -213,29 +212,24 @@ void init_menu_screen()
 	sprite->dy = 1.0f;
 }
 
-/*Prompt dialog */
+/*Scoreboard System */
 void score_dialog()
 {
 	static char hint_buf[64], input_buf[64];
-	// if (score_data)
-	// {
-	// char buf[64];
-	// stbsp_sprintf(buf, "Score: %d", score);
 	SwkbdState swkbd;
 	SwkbdButton button_pressed = SWKBD_BUTTON_NONE;
-	// swkbdSetHintText(&swkbd, "No Japanese text allowed ¯\\_(ツ)_/¯");
-	sprintf(hint_buf, "Enter your name to save your score");
-	// stbsp_sprintf(hint_buf, "Enter your name to save your score -> %d", score_data);
+	sprintf(hint_buf, "Enter your nickname to save your score");
 	swkbdInit(&swkbd, SWKBD_TYPE_NORMAL, 2, -1);
 	swkbdSetValidation(&swkbd, SWKBD_NOTEMPTY_NOTBLANK | SWKBD_FILTER_AT, 0, 0);
 	swkbdSetHintText(&swkbd, hint_buf);
+
 	/* The system OS stops us here until the user is done inputting text */
 	button_pressed = swkbdInputText(&swkbd, input_buf, sizeof(input_buf));
 	/* We resume execution here */
 	if (button_pressed == SWKBD_BUTTON_CONFIRM)
 	{
-		// write_score_to_disk(input_buf, score_data);
-		score_data = 0;
+		save_score(input_buf, score_data);
+		// score_data = 0;
 	}
 	else
 	{
@@ -243,6 +237,138 @@ void score_dialog()
 	}
 	// }
 }
+
+void save_score(char *name, int score_data)
+{
+
+	FILE *fr = fopen("Marine_Rescue_scoreboard.txt", "r");
+	player_score *records = NULL;
+
+	if (fr)
+	{
+		/* Read all records */
+		do
+		{
+			player_score new_record;
+			//Validate if new nickname and record is similar to the end of the file
+			if (fscanf(fr, "%s\n", new_record.name) == EOF)
+				break;
+			if (fscanf(fr, "@%d\n", &new_record.score) == EOF)
+				break;
+			sb_push(records, new_record);
+		} while (1);
+		fclose(fr);
+	}
+
+	/* copying the last player score to the Scoreboard list */
+	player_score last_player_score;
+	//
+	strcpy(last_player_score.name, name);
+	last_player_score.score = score_data;
+	sb_push(records, last_player_score);
+
+	/* Reorder scores */
+	for (int i = 0; i < sb_count(records); ++i)
+	{
+		for (int j = 0; j < i; ++j)
+		{
+			if (records[j].score < records[i].score)
+			{
+				player_score tmp = records[j];
+				records[j] = records[i];
+				records[i] = tmp;
+			}
+		}
+	}
+
+	/* Rewrite ordered scores */
+	FILE *fw = fopen("Marine_Rescue_scoreboard.txt", "w");
+	for (int i = 0; i < sb_count(records); ++i)
+	{
+		fprintf(fw, "%s\n", records[i].name);
+		fprintf(fw, "@%d\n", records[i].score);
+	}
+	fclose(fw);
+	sb_free(records);
+}
+
+// void show_scoreboard(void)
+// {
+// 	float initial_x = 50.0f;
+// 	float initial_y = 40.0f;
+// 	C2D_Text s_text;
+// 	C2D_TextBuf s_buffer;
+
+// 	FILE *fr = fopen("Marine_Rescue_scoreboard.txt", "r");
+// 	player_score *records = NULL;
+
+// 	if (fr)
+// 	{
+// 		/* Read all records */
+// 		do
+// 		{
+// 			player_score new_record;
+// 			if (fscanf(fr, "%s\n", new_record.name) == EOF)
+// 				break;
+// 			if (fscanf(fr, "@%d\n", &new_record.score) == EOF)
+// 				break;
+// 			sb_push(records, new_record);
+// 		} while (1);
+// 		fclose(fr);
+// 	}
+// 	if (sb_count(records) < 5)
+// 	{
+// 		int j = 0;
+// 		while (sb_count(records) < 5)
+// 		{
+// 			player_score predef_score;
+// 			strcpy(predef_score.name, predef_score_names[j]);
+// 			predef_score.score = predef_score_scores[j];
+// 			sb_push(records, predef_score);
+// 			++j;
+// 		}
+// 		/* Reorder scores */
+// 		for (int i = 0; i < sb_count(records); ++i)
+// 		{
+// 			for (int j = 0; j < i; ++j)
+// 			{
+// 				if (records[j].score < records[i].score)
+// 				{
+// 					player_score tmp = records[j];
+// 					records[j] = records[i];
+// 					records[i] = tmp;
+// 				}
+// 			}
+// 		}
+// 		/* Write predefined scores to file */
+// 		/* Rewrite ordered scores */
+// 		FILE *fw = fopen("Marine_Rescue_scoreboard.txt", "w");
+// 		for (int i = 0; i < sb_count(records); ++i)
+// 		{
+// 			fprintf(fw, "%s\n", records[i].name);
+// 			fprintf(fw, "@%d\n", records[i].score);
+// 		}
+// 		fclose(fw);
+// 	}
+
+// 	for (int i = 0; i < 5 && i < sb_count(records); i++)
+// 	{
+
+// 		char buf[SCORE_TEXT_LENGTH];
+// 		stbsp_sprintf(buf, "%s ——- %d", records[i].name, records[i].score);
+
+// 		s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
+// 		C2D_TextParse(&s_text, s_buffer, buf);
+// 		C2D_DrawText(&s_text, C2D_WithColor, initial_x, initial_y, 0.0f, 0.7f, 0.7f, WHITE);
+
+// 		initial_y += 15.0f;
+// 	}
+
+// 	s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
+// 	C2D_TextParse(&s_text, s_buffer, "Press A to go back");
+// 	C2D_DrawText(&s_text, C2D_WithColor, initial_x, BOTTOM_SCREEN_HEIGHT - 15.0f, 0.0f, 0.7f, 0.7f, WHITE);
+// 	sb_free(records);
+// }
 
 /* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id)
@@ -765,7 +891,6 @@ void scenesExit()
 	C2D_SpriteSheetFree(screens_spriteSheet);
 }
 
-/* Game Controllers */
 void gameStatusController(int game_sentinel, int time_sentinel)
 {
 	switch (game_sentinel)
@@ -878,6 +1003,16 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 		if (kDown & KEY_SELECT)
 			gameStatusController(START_GAMESTATE, INTIAL_PAUSED_TIME);
 	}
+
+	// Save the player's score
+	if (game_sentinel == GAMEOVER_GAMESTATE)
+	{
+		if (kDown & KEY_A)
+		{
+			score_data = points;
+			score_dialog();
+		}
+	}
 }
 
 void gameInitController()
@@ -938,7 +1073,6 @@ void gameDrawersTopScreenController(int game_sentinel)
 	else if (game_sentinel == GAMEOVER_GAMESTATE)
 	{
 		drawer_game_over_screen();
-		score_dialog();
 	}
 }
 
