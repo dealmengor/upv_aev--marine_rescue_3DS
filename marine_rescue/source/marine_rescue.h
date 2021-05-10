@@ -161,6 +161,9 @@ void init_pause_screen();
 void init_menu_screen();
 void init_game_over_screen();
 
+/*Prompt dialog */
+void score_dialog();
+
 /* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id);
 
@@ -214,9 +217,8 @@ void drawer_pause_screen();
 void drawer_menu_screen();
 void drawer_game_over_screen();
 
-    /* System Functions */
-    void
-    sceneInit_bottom();
+/* System Functions */
+void sceneInit_bottom();
 void scenesExit();
 
 /* Game Controllers */

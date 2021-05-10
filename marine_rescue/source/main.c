@@ -34,6 +34,10 @@ static Screen game_title, sea, game_over;
 // Bottom Screens
 static Screen menu, scoreboard, pause;
 
+/*Prompt dialog */
+int score_data;
+int score;
+
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
 static C2D_SpriteSheet coastguard_spriteSheet;
@@ -207,6 +211,37 @@ void init_menu_screen()
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
 	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
 	sprite->dy = 1.0f;
+}
+
+/*Prompt dialog */
+void score_dialog()
+{
+	static char hint_buf[64], input_buf[64];
+	// if (score_data)
+	// {
+	// char buf[64];
+	// stbsp_sprintf(buf, "Score: %d", score);
+	SwkbdState swkbd;
+	SwkbdButton button_pressed = SWKBD_BUTTON_NONE;
+	// swkbdSetHintText(&swkbd, "No Japanese text allowed ¯\\_(ツ)_/¯");
+	sprintf(hint_buf, "Enter your name to save your score");
+	// stbsp_sprintf(hint_buf, "Enter your name to save your score -> %d", score_data);
+	swkbdInit(&swkbd, SWKBD_TYPE_NORMAL, 2, -1);
+	swkbdSetValidation(&swkbd, SWKBD_NOTEMPTY_NOTBLANK | SWKBD_FILTER_AT, 0, 0);
+	swkbdSetHintText(&swkbd, hint_buf);
+	/* The system OS stops us here until the user is done inputting text */
+	button_pressed = swkbdInputText(&swkbd, input_buf, sizeof(input_buf));
+	/* We resume execution here */
+	if (button_pressed == SWKBD_BUTTON_CONFIRM)
+	{
+		// write_score_to_disk(input_buf, score_data);
+		score_data = 0;
+	}
+	else
+	{
+		score_data = 0;
+	}
+	// }
 }
 
 /* Sprite Controller */
@@ -903,6 +938,7 @@ void gameDrawersTopScreenController(int game_sentinel)
 	else if (game_sentinel == GAMEOVER_GAMESTATE)
 	{
 		drawer_game_over_screen();
+		score_dialog();
 	}
 }
 
