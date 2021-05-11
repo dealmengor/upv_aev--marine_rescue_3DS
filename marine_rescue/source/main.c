@@ -756,85 +756,75 @@ void drawer_top_list_screen()
 
 void drawer_top_list(float size)
 {
-	char testbuf12[BUFFER_SIZE];
-	C2D_Text testo;
-	snprintf(testbuf12, sizeof(testbuf12), "PRUEBA");
-	C2D_TextParse(&testo, g_dynamicBuf, testbuf12);
-	C2D_TextOptimize(&testo);
-	C2D_DrawText(&testo, C2D_AtBaseline | C2D_WithColor | C2D_AlignRight, 384.0f, 150.0f, 0.5f, size, size, WHITE);
-	// float initial_x = 50.0f;
-	// float initial_y = 40.0f;
-	// C2D_Text s_text;
-	// C2D_TextBuf s_buffer;
+	float initial_x = 50.0f;
+	float initial_y = 70.0f;
+	C2D_Text s_text;
+	C2D_TextBuf s_buffer;
 
-	// FILE *fr = fopen("Marine_Rescue_scoreboard.txt", "r");
-	// player_score *records = NULL;
+	FILE *fr = fopen("Marine_Rescue_scoreboard.txt", "r");
+	player_score *records = NULL;
 
-	// if (fr)
-	// {
-	// 	/* Read all records */
-	// 	do
-	// 	{
-	// 		player_score new_record;
-	// 		if (fscanf(fr, "%s\n", new_record.name) == EOF)
-	// 			break;
-	// 		if (fscanf(fr, "@%d\n", &new_record.score) == EOF)
-	// 			break;
-	// 		sb_push(records, new_record);
-	// 	} while (1);
-	// 	fclose(fr);
-	// }
-	// if (sb_count(records) < SCOREBOARD_LIMIT)
-	// {
-	// 	int j = 0;
-	// 	while (sb_count(records) < SCOREBOARD_LIMIT)
-	// 	{
-	// 		player_score predef_score;
-	// 		strcpy(predef_score.name, predef_score_names[j]);
-	// 		predef_score.score = predef_score_scores[j];
-	// 		sb_push(records, predef_score);
-	// 		++j;
-	// 	}
-	// 	/* Reorder scores */
-	// 	for (int i = 0; i < sb_count(records); ++i)
-	// 	{
-	// 		for (int j = 0; j < i; ++j)
-	// 		{
-	// 			if (records[j].score < records[i].score)
-	// 			{
-	// 				player_score tmp = records[j];
-	// 				records[j] = records[i];
-	// 				records[i] = tmp;
-	// 			}
-	// 		}
-	// 	}
-	// 	/* Write predefined scores to file */
-	// 	/* Rewrite ordered scores */
-	// 	FILE *fw = fopen("Marine_Rescue_scoreboard.txt", "w");
-	// 	for (int i = 0; i < sb_count(records); ++i)
-	// 	{
-	// 		fprintf(fw, "%s\n", records[i].name);
-	// 		fprintf(fw, "@%d\n", records[i].score);
-	// 	}
-	// 	fclose(fw);
-	// }
-	// for (int i = 0; i < 5 && i < sb_count(records); i++)
-	// {
+	if (fr)
+	{
+		/* Read all records */
+		do
+		{
+			player_score new_record;
+			if (fscanf(fr, "%s\n", new_record.name) == EOF)
+				break;
+			if (fscanf(fr, "@%d\n", &new_record.score) == EOF)
+				break;
+			sb_push(records, new_record);
+		} while (1);
+		fclose(fr);
+	}
+	if (sb_count(records) < SCOREBOARD_LIMIT)
+	{
+		int j = 0;
+		while (sb_count(records) < SCOREBOARD_LIMIT)
+		{
+			player_score predef_score;
+			strcpy(predef_score.name, predef_score_names[j]);
+			predef_score.score = predef_score_scores[j];
+			sb_push(records, predef_score);
+			++j;
+		}
+		/* Reorder scores */
+		for (int i = 0; i < sb_count(records); ++i)
+		{
+			for (int j = 0; j < i; ++j)
+			{
+				if (records[j].score < records[i].score)
+				{
+					player_score tmp = records[j];
+					records[j] = records[i];
+					records[i] = tmp;
+				}
+			}
+		}
+		/* Write predefined scores to file */
+		/* Rewrite ordered scores */
+		FILE *fw = fopen("Marine_Rescue_scoreboard.txt", "w");
+		for (int i = 0; i < sb_count(records); ++i)
+		{
+			fprintf(fw, "%s\n", records[i].name);
+			fprintf(fw, "@%d\n", records[i].score);
+		}
+		fclose(fw);
+	}
+	for (int i = 0; i < 5 && i < sb_count(records); i++)
+	{
 
-	// 	char buf[SCORE_TEXT_LENGTH];
-	// 	snprintf(buf, sizeof(buf), "%s ——- %d", records[i].name, records[i].score);
+		char buf[SCORE_TEXT_LENGTH];
+		snprintf(buf, sizeof(buf), "%s ——- %d", records[i].name, records[i].score);
 
-	// 	s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
-	// 	C2D_TextParse(&s_text, s_buffer, buf);
-	// 	C2D_DrawText(&s_text, C2D_WithColor, initial_x, initial_y, 0.0f, 0.7f, 0.7f, WHITE);
+		s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
+		C2D_TextParse(&s_text, s_buffer, buf);
+		C2D_DrawText(&s_text, C2D_WithColor, initial_x, initial_y, 0.0f, 0.7f, 0.7f, WHITE);
 
-	// 	initial_y += 15.0f;
-	// }
-
-	// s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
-	// C2D_TextParse(&s_text, s_buffer, "Press A to go back");
-	// C2D_DrawText(&s_text, C2D_WithColor, initial_x, BOTTOM_SCREEN_HEIGHT - 15.0f, 0.0f, 0.7f, 0.7f, WHITE);
-	// sb_free(records);
+		initial_y += 15.0f;
+	}
+	sb_free(records);
 }
 
 // Bottom Screens

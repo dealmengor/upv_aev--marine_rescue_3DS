@@ -245,5 +245,5 @@ void gameDrawersTopScreenController(int game_sentinel);
 void gameDrawersBottomScreenController(int game_sentinel);
 
 /* Predefined scores if there is no savegame */
-char *predef_score_names[] = {"Daigo", "TheViper", "Serral", "KeanuReeves", "TheLegend27"};
-int predef_score_scores[] = {1000000, 10000, 5000, 3500, 1337};
+char *predef_score_names[] = {"TheGodz", "Ninbor", "NekoNoName", "Zunther", "Zartam"};
+int predef_score_scores[] = {150, 100, 80, 60, 40};
