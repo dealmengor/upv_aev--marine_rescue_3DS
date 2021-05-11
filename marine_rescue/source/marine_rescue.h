@@ -62,14 +62,17 @@
 /* Enumerated variables */
 typedef enum
 {
-    EXIT_GAMESTATE,     // 0
-    START_GAMESTATE,    // 1
-    NEW_GAMESTATE,      // 2
-    PAUSED_GAMESTATE,   // 3
-    LEVEL_UP_GAMESTATE, // 4
-    GAMEOVER_GAMESTATE, // 5
-    WIN_GAMESTATE,      // 6
-    MENU_GAMESTATE      // 7
+    EXIT_GAMESTATE,         // 0
+    START_GAMESTATE,        // 1
+    NEW_GAMESTATE,          // 2
+    PAUSED_GAMESTATE,       // 3
+    LEVEL_UP_GAMESTATE,     // 4
+    GAMEOVER_GAMESTATE,     // 5
+    WIN_GAMESTATE,          // 6
+    MENU_GAMESTATE,         // 7
+    TOP_LIST_GAMESTATE,     // 8
+    INSTRUCTIONS_GAMESTATE, // 9
+    CREDITS_GAMESTATE       //10
 } game_state;
 
 typedef enum
@@ -163,13 +166,15 @@ void init_coastguardship();
 // TOP Screens
 void init_game_title_screen();
 void init_sea_screen();
+void init_game_over_screen();
 void init_top_list_screen();
+void init_instructions_screen();
+void init_credits_screen();
 
 // Bottom Screens
 void init_scoreboard_screen();
 void init_pause_screen();
 void init_menu_screen();
-void init_game_over_screen();
 
 /*Top List System */
 void score_dialog();
@@ -220,15 +225,17 @@ void drawer_coastguardship();
 // TOP Screens
 void drawer_game_title_screen();
 void drawer_sea_screen();
+void drawer_game_over_screen();
 void drawer_top_list_screen();
 void drawer_top_list(float size);
+void drawer_instructions_screen();
+void drawer_credits_screen();
 
 // Bottom Screens
 void drawer_scoreboard_screen();
 void drawer_dynamic_score(float size);
 void drawer_pause_screen();
 void drawer_menu_screen();
-void drawer_game_over_screen();
 
 /* System Functions */
 void sceneInit_bottom();

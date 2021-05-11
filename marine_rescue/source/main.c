@@ -29,7 +29,7 @@ Lifeboat *lboat = &lifeboat;
 CoastGuardShip *cgship = &coastguardship;
 
 // TOP Screens
-static Screen game_title, sea, game_over, top_list;
+static Screen game_title, sea, game_over, top_list, instructions, credits;
 
 // Bottom Screens
 static Screen menu, scoreboard, pause;
@@ -191,6 +191,26 @@ void init_top_list_screen()
 	sprite->dy = 1.0f;
 }
 
+void init_instructions_screen()
+{
+	Screen *sprite = &instructions;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 2);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
+void init_credits_screen()
+{
+	Screen *sprite = &credits;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 3);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
 // Bottom Screens
 void init_scoreboard_screen()
 {
@@ -239,13 +259,11 @@ void score_dialog()
 	if (button_pressed == SWKBD_BUTTON_CONFIRM)
 	{
 		save_score(input_buf, score_data);
-		// score_data = 0;
 	}
 	else
 	{
 		score_data = 0;
 	}
-	// }
 }
 
 void save_score(char *name, int score_data)
@@ -827,6 +845,15 @@ void drawer_top_list(float size)
 	sb_free(records);
 }
 
+void drawer_instructions_screen()
+{
+	C2D_DrawSprite(&instructions.spr);
+}
+
+void drawer_credits_screen()
+{
+	C2D_DrawSprite(&credits.spr);
+}
 // Bottom Screens
 void drawer_scoreboard_screen()
 {
@@ -939,6 +966,18 @@ void gameStatusController(int game_sentinel, int time_sentinel)
 	case MENU_GAMESTATE:
 		game_status = MENU_GAMESTATE;
 		break;
+
+	case TOP_LIST_GAMESTATE:
+		game_status = TOP_LIST_GAMESTATE;
+		break;
+
+	case INSTRUCTIONS_GAMESTATE:
+		game_status = INSTRUCTIONS_GAMESTATE;
+		break;
+
+	case CREDITS_GAMESTATE:
+		game_status = CREDITS_GAMESTATE;
+		break;
 	}
 }
 
@@ -993,6 +1032,12 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 	{
 		if (kDown & KEY_START)
 			gameStatusController(START_GAMESTATE, INITIAL_TIME_STATE);
+		if (kDown & KEY_A)
+			gameStatusController(TOP_LIST_GAMESTATE, STOP_TIME_CONTINUITY);
+		if (kDown & KEY_X)
+			gameStatusController(INSTRUCTIONS_GAMESTATE, STOP_TIME_CONTINUITY);
+		if (kDown & KEY_Y)
+			gameStatusController(CREDITS_GAMESTATE, STOP_TIME_CONTINUITY);
 	}
 
 	// START GAMESTATE Controls
@@ -1039,6 +1084,8 @@ void gameInitController()
 	init_sea_screen();
 	init_game_over_screen();
 	init_top_list_screen();
+	init_instructions_screen();
+	init_credits_screen();
 
 	// Bottom Screens
 	init_menu_screen();
@@ -1078,9 +1125,20 @@ void gameDrawersTopScreenController(int game_sentinel)
 	}
 	else if (game_sentinel == MENU_GAMESTATE)
 	{
-		// drawer_game_title_screen();
+		drawer_game_title_screen();
+	}
+	else if (game_sentinel == TOP_LIST_GAMESTATE)
+	{
 		drawer_top_list_screen();
 		drawer_top_list(FONT_SIZE);
+	}
+	else if (game_sentinel == INSTRUCTIONS_GAMESTATE)
+	{
+		drawer_instructions_screen();
+	}
+	else if (game_sentinel == CREDITS_GAMESTATE)
+	{
+		drawer_credits_screen();
 	}
 	else if (game_sentinel == GAMEOVER_GAMESTATE)
 	{
@@ -1099,7 +1157,7 @@ void gameDrawersBottomScreenController(int game_sentinel)
 	{
 		drawer_pause_screen();
 	}
-	else if (game_sentinel == MENU_GAMESTATE)
+	else if (game_sentinel == MENU_GAMESTATE || game_sentinel == TOP_LIST_GAMESTATE || game_sentinel == INSTRUCTIONS_GAMESTATE || game_sentinel == CREDITS_GAMESTATE)
 	{
 		drawer_menu_screen();
 	}
