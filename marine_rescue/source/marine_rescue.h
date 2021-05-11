@@ -36,10 +36,10 @@
 #define CASTAWAY_SPAWN 5
 
 // LifeBoat Variables
-#define BOAT_LIFES 3
+#define BOAT_LIFES 5
 #define BOAT_SPEED 2
 #define BOAT_SEAT_COUNT 0
-#define BOAT_FUEL_RECHARGE 20
+#define BOAT_FUEL_RECHARGE 30
 #define BOAT_FUEL_CONSUMPTION 1
 #define BOAT_TOP_SCREEN_WIDTH 380
 #define BOAT_TOP_SCREEN_HEIGHT 220
@@ -189,6 +189,7 @@ void init_boat_selector();
 void init_game_title_screen();
 void init_sea_screen();
 void init_game_over_screen();
+void init_game_over_screen2();
 void init_top_list_screen();
 void init_instructions_screen();
 void init_credits_screen();
@@ -201,6 +202,7 @@ void init_menu_screen();
 /*Top List System */
 void score_dialog();
 void save_score();
+void score_checker();
 
 /* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id);
@@ -252,6 +254,7 @@ void drawer_boat_selector();
 void drawer_game_title_screen();
 void drawer_sea_screen();
 void drawer_game_over_screen();
+void drawer_game_over_screen2();
 void drawer_top_list_screen();
 void drawer_top_list(float size);
 void drawer_instructions_screen();
@@ -266,6 +269,7 @@ void drawer_menu_screen();
 /* System Functions */
 void sceneInit_bottom();
 void scenesExit();
+void cleaner();
 
 /* Game Controllers */
 void gameStatusController(int game_sentinel, int time_sentinel);
@@ -278,5 +282,5 @@ void gameDrawersTopScreenController(int game_sentinel);
 void gameDrawersBottomScreenController(int game_sentinel);
 
 /* Predefined scores if there is no savegame */
-char *predef_score_names[] = {"TheGodz", "Ninbor", "NekoNoName", "Zunther", "Zartam"};
+char *predef_score_names[] = {"Raknia", "Ninbor", "NekoNoName", "Kirameiko", "TheGodz"};
 int predef_score_scores[] = {150, 100, 80, 60, 40};
