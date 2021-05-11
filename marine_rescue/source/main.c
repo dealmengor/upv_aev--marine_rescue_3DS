@@ -30,9 +30,12 @@ CoastGuardShip *cgship = &coastguardship;
 
 // Icons
 static Icon boat_selector;
+Icon *b_selector = &boat_selector;
+int b_selector_coordinates_matrix_index;
 
 // TOP Screens
-static Screen game_title, sea;
+static Screen game_title,
+	sea;
 
 // Bottom Screens
 static Screen menu, scoreboard, pause;
@@ -149,13 +152,16 @@ void init_coastguardship()
 }
 
 // Icons
-void init_boat_selector(int pos_x, int pos_y)
+void init_boat_selector()
 {
-	Icon *sprite = &boat_selector;
+	int pos_x, pos_y;
+	pos_x = m_boat_selector_coordinates[b_selector_coordinates_matrix_index][0];
+	pos_y = m_boat_selector_coordinates[b_selector_coordinates_matrix_index][1];
+
 	// Position, rotation and SPEED
-	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 8);
-	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, pos_x, pos_y);
+	C2D_SpriteFromSheet(&b_selector->spr, screens_spriteSheet, 8);
+	C2D_SpriteSetCenter(&b_selector->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&b_selector->spr, pos_x, pos_y);
 }
 
 /* Screens */
@@ -207,7 +213,7 @@ void init_menu_screen()
 	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, BOTTOM_SCREEN_HEIGHT);
 }
 
-/* Sprite Controller */
+/* Sprites Controller */
 void controllerSprites_lifeboat(int sprite_id)
 {
 	// Saved last lifeboat position
@@ -382,14 +388,28 @@ void moveLifeboatController(u32 kHeld)
 	}
 }
 
-void moveSprite_boat_selector()
+void moveSprite_boat_selector(u32 kHeld)
 {
-	Icon *sprite = &boat_selector;
-	// if (sprite->spr.params.pos.y < LIFEBOAT_SELECTOR_START_POS_Y)
-	C2D_SpriteMove(&sprite->spr, sprite->spr.params.pos.x, 25);
+	// Adjusts the marker of the matrix coordinate index
+	if ((b_selector_coordinates_matrix_index < MENU_OPTIONS_QUANTITY) && (kHeld & KEY_DOWN))
+	{
+		b_selector_coordinates_matrix_index += 1;
+	}
+	else if ((b_selector_coordinates_matrix_index > 0) && (kHeld & KEY_UP))
+	{
+		b_selector_coordinates_matrix_index -= 1;
+	}
+	else
+	{
+		b_selector_coordinates_matrix_index = 0;
+	}
 
-	// if (sprite->spr.params.pos.y < LIFEBOAT_SELECTOR_MAX_POS_Y)
-	// 	C2D_SpriteMove(&sprite->spr, sprite->spr.params.pos.x, sprite->spr.params.pos.y - 25);
+	// Get the inverse translation
+	int new_pos_x, new_pos_y;
+	new_pos_x = ((b_selector->spr.params.pos.x - m_boat_selector_coordinates[b_selector_coordinates_matrix_index][0]) * -1);
+	new_pos_y = ((b_selector->spr.params.pos.y - m_boat_selector_coordinates[b_selector_coordinates_matrix_index][1]) * -1);
+
+	C2D_SpriteMove(&b_selector->spr, new_pos_x, new_pos_y);
 }
 
 /* Bounce Controllers */
@@ -652,7 +672,7 @@ void drawer_coastguardship()
 // Icons
 void drawer_boat_selector()
 {
-	C2D_DrawSprite(&boat_selector.spr);
+	C2D_DrawSprite(&b_selector->spr);
 }
 
 /* Screens */
@@ -864,11 +884,11 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 
 		if (kDown & KEY_UP)
 		{
-			moveSprite_boat_selector();
+			moveSprite_boat_selector(kHeld);
 		}
 		else if (kDown & KEY_DOWN)
 		{
-			moveSprite_boat_selector();
+			moveSprite_boat_selector(kHeld);
 		}
 	}
 }
@@ -882,7 +902,7 @@ void gameInitController()
 	init_lifeboat(BOAT_LIFES, false, BOAT_START_POS_X, BOAT_START_POS_Y);
 
 	// Icons
-	init_boat_selector(LIFEBOAT_SELECTOR_START_POS_X, LIFEBOAT_SELECTOR_START_POS_Y);
+	init_boat_selector();
 
 	/* Screens */
 
@@ -1022,8 +1042,7 @@ int main(int argc, char *argv[])
 		C2D_SceneBegin(top);
 
 		//Drawer TOP Sprites
-		drawer_testing(FONT_SIZE);
-		//gameDrawersTopScreenController(game_status);
+		gameDrawersTopScreenController(game_status);
 
 		C2D_Flush(); // Ensures all 2D objects so far have been drawn.
 

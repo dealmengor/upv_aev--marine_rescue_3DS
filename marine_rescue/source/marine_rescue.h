@@ -25,6 +25,8 @@
 #define RESCUE_POINTS 10
 #define TIME_DIFFERENCE_QUANTITY 3
 #define TIME_BUFFER_SIZE 80
+#define MENU_OPTIONS_QUANTITY 5
+#define MENU_COORDINATES_DIMENSION 2
 
 // Castaways Variables
 #define MAX_CASTAWAYS 10
@@ -58,11 +60,16 @@
 #define BLACK C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f)
 #define CYAN C2D_Color32(0x68, 0xB0, 0xD8, 0xFF)
 
-// Icons position
-#define LIFEBOAT_SELECTOR_START_POS_X 190
-#define LIFEBOAT_SELECTOR_START_POS_Y 110
-#define LIFEBOAT_SELECTOR_MAX_POS_X 190
-#define LIFEBOAT_SELECTOR_MAX_POS_Y 220
+// Icons
+
+// Boat Selector | Coordinates | X, Y
+const int m_boat_selector_coordinates[MENU_OPTIONS_QUANTITY][MENU_COORDINATES_DIMENSION] = {
+    {191, 109}, // Start Game
+    {212, 132}, // Top 5
+    {192, 156}, // Instructions
+    {210, 180}, // Credits
+    {220, 205}  // Exit
+};
 
 /* Enumerated variables */
 typedef enum
