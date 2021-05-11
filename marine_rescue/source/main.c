@@ -774,11 +774,12 @@ void drawer_top_list_screen()
 
 void drawer_top_list(float size)
 {
-	float initial_x = 50.0f;
-	float initial_y = 70.0f;
-	C2D_Text s_text;
-	C2D_TextBuf s_buffer;
+	// Clear the dynamic text buffer
+	C2D_TextBufClear(g_dynamicBuf);
 
+	float initial_x = 60.0f;
+	float initial_y = 80.0f;
+	C2D_Text s_text;
 	FILE *fr = fopen("Marine_Rescue_scoreboard.txt", "r");
 	player_score *records = NULL;
 
@@ -832,15 +833,12 @@ void drawer_top_list(float size)
 	}
 	for (int i = 0; i < 5 && i < sb_count(records); i++)
 	{
-
-		char buf[SCORE_TEXT_LENGTH];
+		char buf[BUFFER_SIZE];
 		snprintf(buf, sizeof(buf), "%s ——- %d", records[i].name, records[i].score);
-
-		s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
-		C2D_TextParse(&s_text, s_buffer, buf);
-		C2D_DrawText(&s_text, C2D_WithColor, initial_x, initial_y, 0.0f, 0.7f, 0.7f, WHITE);
-
-		initial_y += 15.0f;
+		C2D_TextParse(&s_text, g_dynamicBuf, buf);
+		C2D_TextOptimize(&s_text);
+		C2D_DrawText(&s_text, C2D_AtBaseline | C2D_WithColor, initial_x, initial_y, 0.0f, 0.7f, 0.7f, WHITE);
+		initial_y += 20.0f;
 	}
 	sb_free(records);
 }
