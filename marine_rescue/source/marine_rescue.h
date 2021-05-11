@@ -19,7 +19,7 @@
 #define BOTTOM_SCREEN_HEIGHT 240
 
 // Game Configuratation Variables
-#define START_POINTS 0
+#define START_POINTS 45
 #define START_SPEEDOMETER 0
 #define START_LEVEL 1
 #define NEXT_LEVEL 100
@@ -35,7 +35,7 @@
 #define CASTAWAY_SPAWN 5
 
 // LifeBoat Variables
-#define BOAT_LIFES 3
+#define BOAT_LIFES 1
 #define BOAT_SPEED 2
 #define BOAT_SEAT_COUNT 0
 #define BOAT_FUEL_RECHARGE 20
@@ -167,6 +167,7 @@ void init_coastguardship();
 void init_game_title_screen();
 void init_sea_screen();
 void init_game_over_screen();
+void init_game_over_screen2();
 void init_top_list_screen();
 void init_instructions_screen();
 void init_credits_screen();
@@ -179,6 +180,7 @@ void init_menu_screen();
 /*Top List System */
 void score_dialog();
 void save_score();
+void score_checker();
 
 /* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id);
@@ -226,6 +228,7 @@ void drawer_coastguardship();
 void drawer_game_title_screen();
 void drawer_sea_screen();
 void drawer_game_over_screen();
+void drawer_game_over_screen2();
 void drawer_top_list_screen();
 void drawer_top_list(float size);
 void drawer_instructions_screen();

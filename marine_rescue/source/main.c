@@ -29,19 +29,21 @@ Lifeboat *lboat = &lifeboat;
 CoastGuardShip *cgship = &coastguardship;
 
 // TOP Screens
-static Screen game_title, sea, game_over, top_list, instructions, credits;
+static Screen game_title, sea, game_over, game_over2, top_list, instructions, credits;
 
 // Bottom Screens
 static Screen menu, scoreboard, pause;
 
 /*Top List System */
 int score_data;
+bool checker = false;
 
 /* Spritesheets Declaratation */
 static C2D_SpriteSheet castaways_spriteSheet;
 static C2D_SpriteSheet coastguard_spriteSheet;
 static C2D_SpriteSheet sharpedo_spriteSheet;
 static C2D_SpriteSheet screens_spriteSheet;
+static C2D_SpriteSheet screens2_spriteSheet;
 
 /* C2D_Text Declaration Variables */
 C2D_TextBuf g_dynamicBuf; // Buffer Declaratation
@@ -63,6 +65,9 @@ void init_sprites()
 	// Screens
 	screens_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/screens.t3x");
 	if (!screens_spriteSheet)
+		svcBreak(USERBREAK_PANIC);
+	screens2_spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/screens2.t3x");
+	if (!screens2_spriteSheet)
 		svcBreak(USERBREAK_PANIC);
 }
 
@@ -175,7 +180,17 @@ void init_game_over_screen()
 {
 	Screen *sprite = &game_over;
 	// Position, rotation and SPEED
-	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 8);
+	C2D_SpriteFromSheet(&sprite->spr, screens2_spriteSheet, 0);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
+void init_game_over_screen2()
+{
+	Screen *sprite = &game_over2;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens2_spriteSheet, 1);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
 	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
 	sprite->dy = 1.0f;
@@ -317,6 +332,32 @@ void save_score(char *name, int score_data)
 	}
 	fclose(fw);
 	sb_free(records);
+}
+
+void score_checker()
+{
+	FILE *fp = fopen("Marine_Rescue_scoreboard.txt", "r");
+	int i;
+
+	for (i = 0; i < 5; i++)
+	{
+		player_score record;
+		fscanf(fp, "%s\n", record.name);
+		fscanf(fp, "@%d\n", &record.score);
+
+		// Read the list and compare the player's points against the top 5 members
+		if (score_data > record.score)
+		{
+			checker = true;
+			break;
+		}
+		//Read only the 5 players of the file
+		if (score_data < record.score && i == 4)
+		{
+			checker = false;
+		}
+	}
+	fclose(fp);
 }
 
 /* Sprite Controller */
@@ -552,6 +593,8 @@ void lifeboatDeath(Lifeboat *lboat)
 		if (lboat->lifes == 0)
 		{
 			lboat->seatcount = BOAT_SEAT_COUNT;
+			score_data = points;
+			score_checker();
 			gameStatusController(GAMEOVER_GAMESTATE, STOP_TIME_CONTINUITY);
 		}
 	}
@@ -767,6 +810,11 @@ void drawer_game_over_screen()
 	C2D_DrawSprite(&game_over.spr);
 }
 
+void drawer_game_over_screen2()
+{
+	C2D_DrawSprite(&game_over2.spr);
+}
+
 void drawer_top_list_screen()
 {
 	C2D_DrawSprite(&top_list.spr);
@@ -923,6 +971,7 @@ void scenesExit()
 	C2D_SpriteSheetFree(sharpedo_spriteSheet);
 	C2D_SpriteSheetFree(coastguard_spriteSheet);
 	C2D_SpriteSheetFree(screens_spriteSheet);
+	C2D_SpriteSheetFree(screens2_spriteSheet);
 }
 
 void gameStatusController(int game_sentinel, int time_sentinel)
@@ -1057,11 +1106,10 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 	}
 
 	// Save the player's score
-	if (game_sentinel == GAMEOVER_GAMESTATE)
+	if (game_sentinel == GAMEOVER_GAMESTATE && checker == true)
 	{
 		if (kDown & KEY_A)
 		{
-			score_data = points;
 			score_dialog();
 		}
 	}
@@ -1081,6 +1129,7 @@ void gameInitController()
 	init_game_title_screen();
 	init_sea_screen();
 	init_game_over_screen();
+	init_game_over_screen2();
 	init_top_list_screen();
 	init_instructions_screen();
 	init_credits_screen();
@@ -1140,7 +1189,14 @@ void gameDrawersTopScreenController(int game_sentinel)
 	}
 	else if (game_sentinel == GAMEOVER_GAMESTATE)
 	{
-		drawer_game_over_screen();
+		if (checker == true)
+		{
+			drawer_game_over_screen();
+		}
+		else if (checker == false)
+		{
+			drawer_game_over_screen2();
+		}
 	}
 }
 
