@@ -31,7 +31,7 @@ CoastGuardShip *cgship = &coastguardship;
 // Icons
 static Icon boat_selector;
 Icon *b_selector = &boat_selector;
-int b_selector_coordinates_matrix_index;
+size_t b_selector_coordinates_matrix_index;
 
 // TOP Screens
 static Screen game_title,
@@ -391,7 +391,7 @@ void moveLifeboatController(u32 kHeld)
 void moveSprite_boat_selector(u32 kHeld)
 {
 	// Adjusts the marker of the matrix coordinate index
-	if ((b_selector_coordinates_matrix_index < MENU_OPTIONS_QUANTITY) && (kHeld & KEY_DOWN))
+	if ((b_selector_coordinates_matrix_index < MENU_OPTIONS_QUANTITY - 1) && (kHeld & KEY_DOWN))
 	{
 		b_selector_coordinates_matrix_index += 1;
 	}
@@ -879,16 +879,35 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 	// Menu GAMESTATE Controls
 	if (game_sentinel == MENU_GAMESTATE)
 	{
-		if (kDown & KEY_START)
+		if ((kDown & KEY_START))
 			gameStatusController(START_GAMESTATE, INITIAL_TIME_STATE);
 
 		if (kDown & KEY_UP)
-		{
 			moveSprite_boat_selector(kHeld);
-		}
-		else if (kDown & KEY_DOWN)
-		{
+
+		if (kDown & KEY_DOWN)
 			moveSprite_boat_selector(kHeld);
+
+		if (kDown & KEY_A)
+		{
+			switch (b_selector_coordinates_matrix_index)
+			{
+			case 0:
+				gameStatusController(START_GAMESTATE, INITIAL_TIME_STATE);
+				break;
+			// case 1:
+			// 	gameStatusController(TOP_LIST_GAMESTATE, STOP_TIME_CONTINUITY);
+			// 	break;
+			// case 2:
+			// 	gameStatusController(INSTRUCTIONS_GAMESTATE, STOP_TIME_CONTINUITY);
+			// 	break;
+			// case 3:
+			// 	gameStatusController(CREDITS_GAMESTATE, STOP_TIME_CONTINUITY);
+			// 	break;
+			case 4:
+				gameStatusController(EXIT_GAMESTATE, STOP_TIME_CONTINUITY);
+				break;
+			}
 		}
 	}
 }
