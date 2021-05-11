@@ -174,7 +174,6 @@ void init_game_over_screen();
 /*Top List System */
 void score_dialog();
 void save_score();
-void show_top_list();
 
 /* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id);
@@ -222,6 +221,7 @@ void drawer_coastguardship();
 void drawer_game_title_screen();
 void drawer_sea_screen();
 void drawer_top_list_screen();
+void drawer_top_list(float size);
 
 // Bottom Screens
 void drawer_scoreboard_screen();
