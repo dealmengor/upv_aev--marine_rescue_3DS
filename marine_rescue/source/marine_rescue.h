@@ -39,6 +39,8 @@
 #define BOAT_FUEL_CONSUMPTION 1
 #define BOAT_TOP_SCREEN_WIDTH 380
 #define BOAT_TOP_SCREEN_HEIGHT 220
+#define BOAT_START_POS_X 0
+#define BOAT_START_POS_Y 0
 
 // Sharpedos Variables
 #define MAX_SHARPEDOS 10
@@ -55,6 +57,12 @@
 #define WHITE C2D_Color32(0xFF, 0xFF, 0xFF, 0xFF)
 #define BLACK C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f)
 #define CYAN C2D_Color32(0x68, 0xB0, 0xD8, 0xFF)
+
+// Icons position
+#define LIFEBOAT_SELECTOR_START_POS_X 190
+#define LIFEBOAT_SELECTOR_START_POS_Y 110
+#define LIFEBOAT_SELECTOR_MAX_POS_X 190
+#define LIFEBOAT_SELECTOR_MAX_POS_Y 220
 
 /* Enumerated variables */
 typedef enum
@@ -135,8 +143,13 @@ typedef struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // velocity
 } Screen;
+
+// Icon sprite struct
+typedef struct
+{
+    C2D_Sprite spr;
+} Icon;
 
 /** Function signatures **/
 
@@ -148,6 +161,9 @@ void init_castaways();
 void init_sharpedo();
 void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y);
 void init_coastguardship();
+
+// Icons
+void init_boat_selector();
 
 /* Screens */
 
@@ -199,6 +215,9 @@ void drawer_castaways();
 void drawer_sharpedo();
 void drawer_lifeboat();
 void drawer_coastguardship();
+
+// Icons
+void drawer_boat_selector();
 
 /* Screens */
 
