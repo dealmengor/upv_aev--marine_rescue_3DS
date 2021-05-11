@@ -1096,13 +1096,6 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 	// General GAMESTATE Control
 	if ((kDown & KEY_L) && (kDown & KEY_R))
 		gameStatusController(EXIT_GAMESTATE, STOP_TIME_CONTINUITY); // Break in order to return to hbmenu
-	if (game_sentinel != START_GAMESTATE)
-	{
-		if (kDown & KEY_B)
-		{
-			gameStatusController(MENU_GAMESTATE, INITIAL_TIME_STATE);
-		}
-	}
 
 	// Menu GAMESTATE Controls
 	if (game_sentinel == MENU_GAMESTATE)
@@ -1136,12 +1129,20 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 	}
 
 	/* Game Over GAMESTATE Controls */
+
+	// Save the player's score
 	if (game_sentinel == GAMEOVER_GAMESTATE && checker == true)
 	{
-		// Save the player's score
 		if (kDown & KEY_A)
 		{
 			score_dialog();
+		}
+	}
+	if (game_sentinel == GAMEOVER_GAMESTATE)
+	{
+		if (kDown & KEY_B)
+		{
+			gameStatusController(MENU_GAMESTATE, INITIAL_TIME_STATE);
 		}
 	}
 }
