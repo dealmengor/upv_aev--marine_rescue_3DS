@@ -27,7 +27,8 @@
 #define TIME_DIFFERENCE_QUANTITY 3
 #define TIME_BUFFER_SIZE 80
 #define SCOREBOARD_LIMIT 5
-#define SCORE_TEXT_LENGTH 64
+#define MENU_OPTIONS_QUANTITY 5
+#define MENU_COORDINATES_DIMENSION 2
 
 // Castaways Variables
 #define MAX_CASTAWAYS 10
@@ -42,6 +43,8 @@
 #define BOAT_FUEL_CONSUMPTION 1
 #define BOAT_TOP_SCREEN_WIDTH 380
 #define BOAT_TOP_SCREEN_HEIGHT 220
+#define BOAT_START_POS_X 0
+#define BOAT_START_POS_Y 0
 
 // Sharpedos Variables
 #define MAX_SHARPEDOS 10
@@ -58,6 +61,17 @@
 #define WHITE C2D_Color32(0xFF, 0xFF, 0xFF, 0xFF)
 #define BLACK C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f)
 #define CYAN C2D_Color32(0x68, 0xB0, 0xD8, 0xFF)
+
+// Icons
+
+// Boat Selector | Coordinates | X, Y
+const int m_boat_selector_coordinates[MENU_OPTIONS_QUANTITY][MENU_COORDINATES_DIMENSION] = {
+    {191, 109}, // Start Game
+    {212, 132}, // Top 5
+    {192, 156}, // Instructions
+    {210, 180}, // Credits
+    {220, 205}  // Exit
+};
 
 /* Enumerated variables */
 typedef enum
@@ -141,7 +155,6 @@ typedef struct
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy; // velocity
 } Screen;
 
 typedef struct
@@ -149,6 +162,12 @@ typedef struct
     char name[64];
     int score;
 } player_score;
+
+// Icon sprite struct
+typedef struct
+{
+    C2D_Sprite spr;
+} Icon;
 
 /** Function signatures **/
 
@@ -160,6 +179,9 @@ void init_castaways();
 void init_sharpedo();
 void init_lifeboat(int lifes, bool alive, int pos_x, int pos_y);
 void init_coastguardship();
+
+// Icons
+void init_boat_selector();
 
 /* Screens */
 
@@ -187,8 +209,9 @@ void controllerSprites_lifeboat(int sprite_id);
 void moveSprites_castaways();
 void moveSprites_sharpedos();
 void moveSprite_coastguardship();
-void moveLifeboat_sprite();
+void moveSprite_Lifeboat();
 void moveLifeboatController(u32 kHeld);
+void moveSprite_boat_selector(u32 kHeld);
 
 /* Bounce Controllers */
 void bounceCastaway_Coastguardship(Castaway *castaway);
@@ -219,6 +242,9 @@ void drawer_castaways();
 void drawer_sharpedo();
 void drawer_lifeboat();
 void drawer_coastguardship();
+
+// Icons
+void drawer_boat_selector();
 
 /* Screens */
 

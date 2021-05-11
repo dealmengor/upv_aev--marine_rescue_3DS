@@ -19,7 +19,7 @@ int castawaycount = 0;
 int sharpedocount = 0;
 int castawaysaved = 0;
 
-/*Structures & Data Structures Declaratation*/
+/* Structures & Data Structures Declaratation */
 static Castaway castaways[MAX_CASTAWAYS];
 static Sharpedo sharpedos[MAX_SHARPEDOS];
 static Lifeboat lifeboat;
@@ -27,6 +27,11 @@ static CoastGuardShip coastguardship;
 
 Lifeboat *lboat = &lifeboat;
 CoastGuardShip *cgship = &coastguardship;
+
+// Icons
+static Icon boat_selector;
+Icon *b_selector = &boat_selector;
+size_t b_selector_coordinates_matrix_index;
 
 // TOP Screens
 static Screen game_title, sea, game_over, top_list, instructions, credits;
@@ -148,6 +153,19 @@ void init_coastguardship()
 	cgship->dy = 0;
 }
 
+// Icons
+void init_boat_selector()
+{
+	int pos_x, pos_y;
+	pos_x = m_boat_selector_coordinates[b_selector_coordinates_matrix_index][0];
+	pos_y = m_boat_selector_coordinates[b_selector_coordinates_matrix_index][1];
+
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&b_selector->spr, screens_spriteSheet, 8);
+	C2D_SpriteSetCenter(&b_selector->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&b_selector->spr, pos_x, pos_y);
+}
+
 /* Screens */
 
 // TOP Screens
@@ -157,8 +175,7 @@ void init_game_title_screen()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 0);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, TOP_SCREEN_HEIGHT);
 }
 
 void init_sea_screen()
@@ -167,8 +184,7 @@ void init_sea_screen()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 5);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, TOP_SCREEN_HEIGHT);
 }
 
 void init_game_over_screen()
@@ -178,7 +194,6 @@ void init_game_over_screen()
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 8);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
 	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
 }
 
 void init_top_list_screen()
@@ -188,7 +203,6 @@ void init_top_list_screen()
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 1);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
 	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
 }
 
 void init_instructions_screen()
@@ -198,7 +212,6 @@ void init_instructions_screen()
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 2);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
 	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
 }
 
 void init_credits_screen()
@@ -208,7 +221,6 @@ void init_credits_screen()
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 3);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
 	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
 }
 
 // Bottom Screens
@@ -218,8 +230,7 @@ void init_scoreboard_screen()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 6);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
+	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, BOTTOM_SCREEN_HEIGHT);
 }
 
 void init_pause_screen()
@@ -228,8 +239,7 @@ void init_pause_screen()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 7);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
+	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, BOTTOM_SCREEN_HEIGHT);
 }
 
 void init_menu_screen()
@@ -238,8 +248,7 @@ void init_menu_screen()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 4);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, 240.0f);
-	sprite->dy = 1.0f;
+	C2D_SpriteSetPos(&sprite->spr, BOTTOM_SCREEN_WIDTH / 2, BOTTOM_SCREEN_HEIGHT);
 }
 
 /*Top List System */
@@ -319,7 +328,7 @@ void save_score(char *name, int score_data)
 	sb_free(records);
 }
 
-/* Sprite Controller */
+/* Sprites Controller */
 void controllerSprites_lifeboat(int sprite_id)
 {
 	// Saved last lifeboat position
@@ -492,6 +501,30 @@ void moveLifeboatController(u32 kHeld)
 			controllerSprites_lifeboat(SOUTHWEST_LIFEBOAT6);
 		}
 	}
+}
+
+void moveSprite_boat_selector(u32 kHeld)
+{
+	// Adjusts the marker of the matrix coordinate index
+	if ((b_selector_coordinates_matrix_index < MENU_OPTIONS_QUANTITY - 1) && (kHeld & KEY_DOWN))
+	{
+		b_selector_coordinates_matrix_index += 1;
+	}
+	else if ((b_selector_coordinates_matrix_index > 0) && (kHeld & KEY_UP))
+	{
+		b_selector_coordinates_matrix_index -= 1;
+	}
+	else
+	{
+		b_selector_coordinates_matrix_index = 0;
+	}
+
+	// Get the inverse translation
+	int new_pos_x, new_pos_y;
+	new_pos_x = ((b_selector->spr.params.pos.x - m_boat_selector_coordinates[b_selector_coordinates_matrix_index][0]) * -1);
+	new_pos_y = ((b_selector->spr.params.pos.y - m_boat_selector_coordinates[b_selector_coordinates_matrix_index][1]) * -1);
+
+	C2D_SpriteMove(&b_selector->spr, new_pos_x, new_pos_y);
 }
 
 /* Bounce Controllers */
@@ -749,6 +782,12 @@ void drawer_coastguardship()
 	C2D_DrawSprite(&coastguardship.spr);
 }
 
+// Icons
+void drawer_boat_selector()
+{
+	C2D_DrawSprite(&b_selector->spr);
+}
+
 /* Screens */
 
 // TOP Screens
@@ -852,6 +891,7 @@ void drawer_credits_screen()
 {
 	C2D_DrawSprite(&credits.spr);
 }
+
 // Bottom Screens
 void drawer_scoreboard_screen()
 {
@@ -925,6 +965,7 @@ void scenesExit()
 	C2D_SpriteSheetFree(screens_spriteSheet);
 }
 
+/* Game Controllers */
 void gameStatusController(int game_sentinel, int time_sentinel)
 {
 	switch (game_sentinel)
@@ -955,6 +996,7 @@ void gameStatusController(int game_sentinel, int time_sentinel)
 
 	case GAMEOVER_GAMESTATE:
 		game_status = GAMEOVER_GAMESTATE;
+		gameStatusController(MENU_GAMESTATE, STOP_TIME_CONTINUITY);
 		break;
 
 	case WIN_GAMESTATE:
@@ -1021,25 +1063,12 @@ void gameTimeController(int time_sentinel, int game_sentinel)
 
 void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 {
-	// General GAMESTATE Control
+	// General GAMESTATE Controls
 	if ((kDown & KEY_L) && (kDown & KEY_R))
 		gameStatusController(EXIT_GAMESTATE, STOP_TIME_CONTINUITY); // Break in order to return to hbmenu
 
-	// Menu GAMESTATE Controls
-	if (game_sentinel == MENU_GAMESTATE)
-	{
-		if (kDown & KEY_START)
-			gameStatusController(START_GAMESTATE, INITIAL_TIME_STATE);
-		if (kDown & KEY_A)
-			gameStatusController(TOP_LIST_GAMESTATE, STOP_TIME_CONTINUITY);
-		if (kDown & KEY_X)
-			gameStatusController(INSTRUCTIONS_GAMESTATE, STOP_TIME_CONTINUITY);
-		if (kDown & KEY_Y)
-			gameStatusController(CREDITS_GAMESTATE, STOP_TIME_CONTINUITY);
-	}
-
-	// START GAMESTATE Controls
-	if (game_sentinel == START_GAMESTATE)
+	// Start GAMESTATE & Level Up GAMESTATE Controls
+	if (game_sentinel == START_GAMESTATE || game_sentinel == LEVEL_UP_GAMESTATE)
 	{
 		// D-PAD Controller
 		if (kHeld & KEY_UP || kHeld & KEY_DOWN || kHeld & KEY_LEFT || kHeld & KEY_RIGHT)
@@ -1056,13 +1085,48 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 			gameStatusController(START_GAMESTATE, INTIAL_PAUSED_TIME);
 	}
 
-	// Save the player's score
+	// GameOver GAMESTATES | save the player's score
 	if (game_sentinel == GAMEOVER_GAMESTATE)
 	{
 		if (kDown & KEY_A)
 		{
 			score_data = points;
 			score_dialog();
+		}
+	}
+
+	// Menu GAMESTATE Controls
+	if (game_sentinel == MENU_GAMESTATE || game_sentinel == TOP_LIST_GAMESTATE || game_sentinel == INSTRUCTIONS_GAMESTATE || game_sentinel == CREDITS_GAMESTATE)
+	{
+		if ((kDown & KEY_START))
+			gameStatusController(START_GAMESTATE, INITIAL_TIME_STATE);
+
+		if (kDown & KEY_UP)
+			moveSprite_boat_selector(kHeld);
+
+		if (kDown & KEY_DOWN)
+			moveSprite_boat_selector(kHeld);
+
+		if (kDown & KEY_A)
+		{
+			switch (b_selector_coordinates_matrix_index)
+			{
+			case 0:
+				gameStatusController(START_GAMESTATE, INITIAL_TIME_STATE);
+				break;
+			case 1:
+				gameStatusController(TOP_LIST_GAMESTATE, STOP_TIME_CONTINUITY);
+				break;
+			case 2:
+				gameStatusController(INSTRUCTIONS_GAMESTATE, STOP_TIME_CONTINUITY);
+				break;
+			case 3:
+				gameStatusController(CREDITS_GAMESTATE, STOP_TIME_CONTINUITY);
+				break;
+			case 4:
+				gameStatusController(EXIT_GAMESTATE, STOP_TIME_CONTINUITY);
+				break;
+			}
 		}
 	}
 }
@@ -1073,7 +1137,10 @@ void gameInitController()
 	init_castaways();
 	init_sharpedo();
 	init_coastguardship();
-	init_lifeboat(BOAT_LIFES, false, 0, 0);
+	init_lifeboat(BOAT_LIFES, false, BOAT_START_POS_X, BOAT_START_POS_Y);
+
+	// Icons
+	init_boat_selector();
 
 	/* Screens */
 
@@ -1158,6 +1225,7 @@ void gameDrawersBottomScreenController(int game_sentinel)
 	else if (game_sentinel == MENU_GAMESTATE || game_sentinel == TOP_LIST_GAMESTATE || game_sentinel == INSTRUCTIONS_GAMESTATE || game_sentinel == CREDITS_GAMESTATE)
 	{
 		drawer_menu_screen();
+		drawer_boat_selector();
 	}
 }
 
