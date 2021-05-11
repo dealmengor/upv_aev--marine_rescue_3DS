@@ -1,6 +1,6 @@
 --atlas -f rgba8888 -z auto
 game_title.png
-top_5.png
+top_list.png
 instructions.png
 credits.png
 menu.png

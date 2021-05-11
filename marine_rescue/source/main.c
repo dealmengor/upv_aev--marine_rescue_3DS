@@ -29,12 +29,12 @@ Lifeboat *lboat = &lifeboat;
 CoastGuardShip *cgship = &coastguardship;
 
 // TOP Screens
-static Screen game_title, sea, game_over;
+static Screen game_title, sea, game_over, top_list;
 
 // Bottom Screens
 static Screen menu, scoreboard, pause;
 
-/*Prompt dialog */
+/*Top List System */
 int score_data;
 
 /* Spritesheets Declaratation */
@@ -181,6 +181,16 @@ void init_game_over_screen()
 	sprite->dy = 1.0f;
 }
 
+void init_top_list_screen()
+{
+	Screen *sprite = &top_list;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 1);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	sprite->dy = 1.0f;
+}
+
 // Bottom Screens
 void init_scoreboard_screen()
 {
@@ -212,7 +222,7 @@ void init_menu_screen()
 	sprite->dy = 1.0f;
 }
 
-/*Scoreboard System */
+/*Top List System */
 void score_dialog()
 {
 	static char hint_buf[64], input_buf[64];
@@ -262,7 +272,6 @@ void save_score(char *name, int score_data)
 
 	/* copying the last player score to the Scoreboard list */
 	player_score last_player_score;
-	//
 	strcpy(last_player_score.name, name);
 	last_player_score.score = score_data;
 	sb_push(records, last_player_score);
@@ -292,83 +301,83 @@ void save_score(char *name, int score_data)
 	sb_free(records);
 }
 
-// void show_scoreboard(void)
-// {
-// 	float initial_x = 50.0f;
-// 	float initial_y = 40.0f;
-// 	C2D_Text s_text;
-// 	C2D_TextBuf s_buffer;
+void show_top_list(void)
+{
+	float initial_x = 50.0f;
+	float initial_y = 40.0f;
+	C2D_Text s_text;
+	C2D_TextBuf s_buffer;
 
-// 	FILE *fr = fopen("Marine_Rescue_scoreboard.txt", "r");
-// 	player_score *records = NULL;
+	FILE *fr = fopen("Marine_Rescue_scoreboard.txt", "r");
+	player_score *records = NULL;
 
-// 	if (fr)
-// 	{
-// 		/* Read all records */
-// 		do
-// 		{
-// 			player_score new_record;
-// 			if (fscanf(fr, "%s\n", new_record.name) == EOF)
-// 				break;
-// 			if (fscanf(fr, "@%d\n", &new_record.score) == EOF)
-// 				break;
-// 			sb_push(records, new_record);
-// 		} while (1);
-// 		fclose(fr);
-// 	}
-// 	if (sb_count(records) < 5)
-// 	{
-// 		int j = 0;
-// 		while (sb_count(records) < 5)
-// 		{
-// 			player_score predef_score;
-// 			strcpy(predef_score.name, predef_score_names[j]);
-// 			predef_score.score = predef_score_scores[j];
-// 			sb_push(records, predef_score);
-// 			++j;
-// 		}
-// 		/* Reorder scores */
-// 		for (int i = 0; i < sb_count(records); ++i)
-// 		{
-// 			for (int j = 0; j < i; ++j)
-// 			{
-// 				if (records[j].score < records[i].score)
-// 				{
-// 					player_score tmp = records[j];
-// 					records[j] = records[i];
-// 					records[i] = tmp;
-// 				}
-// 			}
-// 		}
-// 		/* Write predefined scores to file */
-// 		/* Rewrite ordered scores */
-// 		FILE *fw = fopen("Marine_Rescue_scoreboard.txt", "w");
-// 		for (int i = 0; i < sb_count(records); ++i)
-// 		{
-// 			fprintf(fw, "%s\n", records[i].name);
-// 			fprintf(fw, "@%d\n", records[i].score);
-// 		}
-// 		fclose(fw);
-// 	}
+	if (fr)
+	{
+		/* Read all records */
+		do
+		{
+			player_score new_record;
+			if (fscanf(fr, "%s\n", new_record.name) == EOF)
+				break;
+			if (fscanf(fr, "@%d\n", &new_record.score) == EOF)
+				break;
+			sb_push(records, new_record);
+		} while (1);
+		fclose(fr);
+	}
+	if (sb_count(records) < SCOREBOARD_LIMIT)
+	{
+		int j = 0;
+		while (sb_count(records) < SCOREBOARD_LIMIT)
+		{
+			player_score predef_score;
+			strcpy(predef_score.name, predef_score_names[j]);
+			predef_score.score = predef_score_scores[j];
+			sb_push(records, predef_score);
+			++j;
+		}
+		/* Reorder scores */
+		for (int i = 0; i < sb_count(records); ++i)
+		{
+			for (int j = 0; j < i; ++j)
+			{
+				if (records[j].score < records[i].score)
+				{
+					player_score tmp = records[j];
+					records[j] = records[i];
+					records[i] = tmp;
+				}
+			}
+		}
+		/* Write predefined scores to file */
+		/* Rewrite ordered scores */
+		FILE *fw = fopen("Marine_Rescue_scoreboard.txt", "w");
+		for (int i = 0; i < sb_count(records); ++i)
+		{
+			fprintf(fw, "%s\n", records[i].name);
+			fprintf(fw, "@%d\n", records[i].score);
+		}
+		fclose(fw);
+	}
 
-// 	for (int i = 0; i < 5 && i < sb_count(records); i++)
-// 	{
+	// for (int i = 0; i < 5 && i < sb_count(records); i++)
+	// {
 
-// 		char buf[SCORE_TEXT_LENGTH];
-// 		stbsp_sprintf(buf, "%s ——- %d", records[i].name, records[i].score);
+	// 	char buf[SCORE_TEXT_LENGTH];
+	// 	snprintf(buf, sizeof(buf), "%s ——- %d", records[i].name, records[i].score);
 
-// 		s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
-// 		C2D_TextParse(&s_text, s_buffer, buf);
-// 		C2D_DrawText(&s_text, C2D_WithColor, initial_x, initial_y, 0.0f, 0.7f, 0.7f, WHITE);
+	// 	s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
+	// 	C2D_TextParse(&s_text, s_buffer, buf);
+	// 	C2D_DrawText(&s_text, C2D_WithColor, initial_x, initial_y, 0.0f, 0.7f, 0.7f, WHITE);
 
-// 		initial_y += 15.0f;
-// 	}
+	// 	initial_y += 15.0f;
+	// }
 
-// 	s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
-// 	C2D_TextParse(&s_text, s_buffer, "Press A to go back");
-// 	C2D_DrawText(&s_text, C2D_WithColor, initial_x, BOTTOM_SCREEN_HEIGHT - 15.0f, 0.0f, 0.7f, 0.7f, WHITE);
-// 	sb_free(records);
-// }
+	s_buffer = C2D_TextBufNew(SCORE_TEXT_LENGTH);
+	C2D_TextParse(&s_text, s_buffer, "Press A to go back");
+	C2D_DrawText(&s_text, C2D_WithColor, initial_x, BOTTOM_SCREEN_HEIGHT - 15.0f, 0.0f, 0.7f, 0.7f, WHITE);
+	sb_free(records);
+}
 
 /* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id)
@@ -818,6 +827,11 @@ void drawer_game_over_screen()
 	C2D_DrawSprite(&game_over.spr);
 }
 
+void drawer_top_list_screen()
+{
+	C2D_DrawSprite(&top_list.spr);
+}
+
 // Bottom Screens
 void drawer_scoreboard_screen()
 {
@@ -1013,6 +1027,14 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 			score_dialog();
 		}
 	}
+
+	if (game_sentinel == MENU_GAMESTATE)
+	{
+		if (kDown & KEY_Y)
+		{
+			show_top_list();
+		}
+	}
 }
 
 void gameInitController()
@@ -1029,6 +1051,7 @@ void gameInitController()
 	init_game_title_screen();
 	init_sea_screen();
 	init_game_over_screen();
+	init_top_list_screen();
 
 	// Bottom Screens
 	init_menu_screen();
@@ -1068,7 +1091,8 @@ void gameDrawersTopScreenController(int game_sentinel)
 	}
 	else if (game_sentinel == MENU_GAMESTATE)
 	{
-		drawer_game_title_screen();
+		// drawer_game_title_screen();
+		drawer_top_list_screen();
 	}
 	else if (game_sentinel == GAMEOVER_GAMESTATE)
 	{

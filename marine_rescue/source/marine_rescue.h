@@ -26,6 +26,8 @@
 #define RESCUE_POINTS 10
 #define TIME_DIFFERENCE_QUANTITY 3
 #define TIME_BUFFER_SIZE 80
+#define SCOREBOARD_LIMIT 5
+#define SCORE_TEXT_LENGTH 64
 
 // Castaways Variables
 #define MAX_CASTAWAYS 10
@@ -161,6 +163,7 @@ void init_coastguardship();
 // TOP Screens
 void init_game_title_screen();
 void init_sea_screen();
+void init_top_list_screen();
 
 // Bottom Screens
 void init_scoreboard_screen();
@@ -168,9 +171,10 @@ void init_pause_screen();
 void init_menu_screen();
 void init_game_over_screen();
 
-/*Scoreboard System */
+/*Top List System */
 void score_dialog();
 void save_score();
+void show_top_list();
 
 /* Sprite Controller */
 void controllerSprites_lifeboat(int sprite_id);
@@ -217,6 +221,7 @@ void drawer_coastguardship();
 // TOP Screens
 void drawer_game_title_screen();
 void drawer_sea_screen();
+void drawer_top_list_screen();
 
 // Bottom Screens
 void drawer_scoreboard_screen();
@@ -238,3 +243,7 @@ void gameMoveSpritesController();
 void gameCollisionsController();
 void gameDrawersTopScreenController(int game_sentinel);
 void gameDrawersBottomScreenController(int game_sentinel);
+
+/* Predefined scores if there is no savegame */
+char *predef_score_names[] = {"Daigo", "TheViper", "Serral", "KeanuReeves", "TheLegend27"};
+int predef_score_scores[] = {1000000, 10000, 5000, 3500, 1337};
