@@ -19,7 +19,7 @@
 #define BOTTOM_SCREEN_HEIGHT 240
 
 // Game Configuratation Variables
-#define START_POINTS 45
+#define START_POINTS 0
 #define START_SPEEDOMETER 0
 #define START_LEVEL 1
 #define NEXT_LEVEL 100
@@ -35,10 +35,10 @@
 #define CASTAWAY_SPAWN 5
 
 // LifeBoat Variables
-#define BOAT_LIFES 1
+#define BOAT_LIFES 5
 #define BOAT_SPEED 2
 #define BOAT_SEAT_COUNT 0
-#define BOAT_FUEL_RECHARGE 20
+#define BOAT_FUEL_RECHARGE 30
 #define BOAT_FUEL_CONSUMPTION 1
 #define BOAT_TOP_SCREEN_WIDTH 380
 #define BOAT_TOP_SCREEN_HEIGHT 220
@@ -243,6 +243,7 @@ void drawer_menu_screen();
 /* System Functions */
 void sceneInit_bottom();
 void scenesExit();
+void cleaner();
 
 /* Game Controllers */
 void gameStatusController(int game_sentinel, int time_sentinel);
@@ -255,5 +256,5 @@ void gameDrawersTopScreenController(int game_sentinel);
 void gameDrawersBottomScreenController(int game_sentinel);
 
 /* Predefined scores if there is no savegame */
-char *predef_score_names[] = {"TheGodz", "Ninbor", "NekoNoName", "Zunther", "Zartam"};
+char *predef_score_names[] = {"Raknia", "Ninbor", "NekoNoName", "Kirameiko", "TheGodz"};
 int predef_score_scores[] = {150, 100, 80, 60, 40};

@@ -594,7 +594,10 @@ void lifeboatDeath(Lifeboat *lboat)
 		{
 			lboat->seatcount = BOAT_SEAT_COUNT;
 			score_data = points;
+
+			// Compare current score against the Top List
 			score_checker();
+
 			gameStatusController(GAMEOVER_GAMESTATE, STOP_TIME_CONTINUITY);
 		}
 	}
@@ -900,6 +903,7 @@ void drawer_credits_screen()
 {
 	C2D_DrawSprite(&credits.spr);
 }
+
 // Bottom Screens
 void drawer_scoreboard_screen()
 {
@@ -974,6 +978,25 @@ void scenesExit()
 	C2D_SpriteSheetFree(screens2_spriteSheet);
 }
 
+void cleaner()
+{
+	/* Socoreboard Variables */
+	game_status = MENU_GAMESTATE;
+	points = START_POINTS;
+	level = START_LEVEL;
+	lb_speedometer = START_SPEEDOMETER;
+
+	/* Element Counters */
+	castawaycount = 0;
+	sharpedocount = 0;
+	castawaysaved = 0;
+
+	/*Top List System */
+	score_data = 0;
+	checker = false;
+}
+
+/* Game Controllers */
 void gameStatusController(int game_sentinel, int time_sentinel)
 {
 	switch (game_sentinel)
@@ -1073,6 +1096,13 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 	// General GAMESTATE Control
 	if ((kDown & KEY_L) && (kDown & KEY_R))
 		gameStatusController(EXIT_GAMESTATE, STOP_TIME_CONTINUITY); // Break in order to return to hbmenu
+	if (game_sentinel != START_GAMESTATE)
+	{
+		if (kDown & KEY_B)
+		{
+			gameStatusController(MENU_GAMESTATE, INITIAL_TIME_STATE);
+		}
+	}
 
 	// Menu GAMESTATE Controls
 	if (game_sentinel == MENU_GAMESTATE)
@@ -1087,7 +1117,7 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 			gameStatusController(CREDITS_GAMESTATE, STOP_TIME_CONTINUITY);
 	}
 
-	// START GAMESTATE Controls
+	// Start GAMESTATE Controls
 	if (game_sentinel == START_GAMESTATE)
 	{
 		// D-PAD Controller
@@ -1105,9 +1135,10 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 			gameStatusController(START_GAMESTATE, INTIAL_PAUSED_TIME);
 	}
 
-	// Save the player's score
+	/* Game Over GAMESTATE Controls */
 	if (game_sentinel == GAMEOVER_GAMESTATE && checker == true)
 	{
+		// Save the player's score
 		if (kDown & KEY_A)
 		{
 			score_dialog();
