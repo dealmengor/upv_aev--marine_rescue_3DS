@@ -33,7 +33,7 @@ Icon *b_selector = &boat_selector;
 size_t b_selector_coordinates_matrix_index;
 
 // TOP Screens
-static Screen game_title, sea, game_over, game_over2, top_list, instructions, credits;
+static Screen game_title, sea, game_over, game_over2, win, top_list, instructions, credits;
 
 // Bottom Screens
 static Screen menu, scoreboard, pause;
@@ -196,7 +196,7 @@ void init_game_over_screen()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens2_spriteSheet, 0);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, TOP_SCREEN_HEIGHT);
 }
 
 void init_game_over_screen2()
@@ -205,7 +205,16 @@ void init_game_over_screen2()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens2_spriteSheet, 1);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, TOP_SCREEN_HEIGHT);
+}
+
+void init_win_game_screen()
+{
+	Screen *sprite = &win;
+	// Position, rotation and SPEED
+	C2D_SpriteFromSheet(&sprite->spr, screens2_spriteSheet, 2);
+	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, TOP_SCREEN_HEIGHT);
 }
 
 void init_top_list_screen()
@@ -214,7 +223,7 @@ void init_top_list_screen()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 1);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, TOP_SCREEN_HEIGHT);
 }
 
 void init_instructions_screen()
@@ -223,7 +232,7 @@ void init_instructions_screen()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 2);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, TOP_SCREEN_HEIGHT);
 }
 
 void init_credits_screen()
@@ -232,7 +241,7 @@ void init_credits_screen()
 	// Position, rotation and SPEED
 	C2D_SpriteFromSheet(&sprite->spr, screens_spriteSheet, 3);
 	C2D_SpriteSetCenter(&sprite->spr, 0.5f, 1.0f);
-	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, 240.0f);
+	C2D_SpriteSetPos(&sprite->spr, TOP_SCREEN_WIDTH / 2, TOP_SCREEN_HEIGHT);
 }
 
 // Bottom Screens
@@ -581,29 +590,22 @@ void bounceSharpedo_Coastguardship(Sharpedo *sharpedo)
 	sharpedo->dy = -sharpedo->dy;
 }
 
-void bounceCoastGuardShip_Lifeboat()
+void bounceCoastGuardShip_Lifeboat(int compass_sentinel)
 {
-	//Lifeboat Fuel Recharge
-	lboat->fuel = BOAT_FUEL_RECHARGE;
+	// UPPER SHIP
+	if (compass_sentinel == NORTH)
+		C2D_SpriteMove(&lboat->spr, 0, -lboat->speed);
 
-	// Validate if there're passengers on the boat
-	if (lboat->seatcount > 0)
-	{
-		//Increase Points
-		for (size_t i = 0; i < lboat->seatcount; i++)
-		{
-			points += RESCUE_POINTS;
-			castawaysaved += 1;
-			if (points % NEXT_LEVEL == 0)
-			{
-				gameStatusController(LEVEL_UP_GAMESTATE, TIME_CONTINUITY); //LEVEL UP!
-			}
-		}
-		lboat->seatcount = 0;
-	}
+	// LEFT SHIP
+	if (compass_sentinel == WEST)
+		C2D_SpriteMove(&lboat->spr, -lboat->speed, 0);
+
+	// RIGTH SHIP
+	if (compass_sentinel == EAST)
+		C2D_SpriteMove(&lboat->spr, lboat->speed, 0);
 }
 
-/* Lifeboat Controllers */
+/* Lifeboat Actions */
 void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway)
 {
 	if ((lboat->alive == true) && (lboat->seatcount < 3) && (castaway->visible == true))
@@ -622,14 +624,36 @@ void lifeboatDeath(Lifeboat *lboat)
 		// GAMEOVER
 		if (lboat->lifes == 0)
 		{
-			lboat->seatcount = BOAT_SEAT_COUNT;
-			score_data = points;
-
-			// Compare current score against the Top List
-			score_checker();
-
 			gameStatusController(GAMEOVER_GAMESTATE, STOP_TIME_CONTINUITY);
 		}
+	}
+}
+
+void lifeboatBoarding()
+{
+	//Lifeboat Fuel Recharge
+	lboat->fuel = BOAT_FUEL_RECHARGE;
+
+	// Validate if there're passengers on the boat
+	if (lboat->seatcount > 0)
+	{
+		//Increase Points
+		for (size_t i = 0; i < lboat->seatcount; i++)
+		{
+			points += RESCUE_POINTS;
+			castawaysaved += 1;
+
+			//Check for win
+			if (points == WIN_POINTS)
+			{
+				gameStatusController(WIN_GAMESTATE, STOP_TIME_CONTINUITY); //WIN GAME!
+			}
+			else if (points % NEXT_LEVEL == 0)
+			{
+				gameStatusController(LEVEL_UP_GAMESTATE, TIME_CONTINUITY); //LEVEL UP!
+			}
+		}
+		lboat->seatcount = 0;
 	}
 }
 
@@ -724,29 +748,35 @@ void collisionCoastGuardShip_Lifeboat()
 	if (lboat->alive == true)
 	{
 		// Collision Check
-		if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) == 60.0f &&
-			abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 13.0f)
+
+		// UPPER
+		if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) <= 50.0f &&
+			abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) <= 30.0f)
 		{
+			// Lifeboat Boarding
+			lifeboatBoarding();
 			// Bounce
-			bounceCoastGuardShip_Lifeboat();
-			//LEFT SHIP
-			C2D_SpriteMove(&lboat->spr, -lboat->speed, 0);
+			bounceCoastGuardShip_Lifeboat(NORTH);
 		}
+
+		// Left
+		else if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) == 60.0f &&
+				 abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 13.0f)
+		{
+			// Lifeboat Boarding
+			lifeboatBoarding();
+			// Bounce
+			bounceCoastGuardShip_Lifeboat(WEST);
+		}
+
+		// Right
 		else if (cgship->spr.params.pos.x - lboat->spr.params.pos.x == -60.0f &&
 				 abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) < 13.0f)
 		{
+			// Lifeboat Boarding
+			lifeboatBoarding();
 			// Bounce
-			bounceCoastGuardShip_Lifeboat();
-			//RIGTH SHIP
-			C2D_SpriteMove(&lboat->spr, lboat->speed, 0);
-		}
-		else if (abs(cgship->spr.params.pos.x - lboat->spr.params.pos.x) <= 50.0f &&
-				 abs(cgship->spr.params.pos.y - lboat->spr.params.pos.y) <= 30.0f)
-		{
-			// Bounce
-			bounceCoastGuardShip_Lifeboat();
-			//UPPER SHIP
-			C2D_SpriteMove(&lboat->spr, 0, -lboat->speed);
+			bounceCoastGuardShip_Lifeboat(EAST);
 		}
 	}
 }
@@ -838,6 +868,11 @@ void drawer_game_over_screen()
 void drawer_game_over_screen2()
 {
 	C2D_DrawSprite(&game_over2.spr);
+}
+
+void drawer_win_game_screen()
+{
+	C2D_DrawSprite(&win.spr);
 }
 
 void drawer_top_list_screen()
@@ -1090,11 +1125,15 @@ void gameStatusController(int game_sentinel, int time_sentinel)
 
 	case GAMEOVER_GAMESTATE:
 		game_status = GAMEOVER_GAMESTATE;
+		lboat->seatcount = BOAT_SEAT_COUNT;
+		score_data = points;
+		score_checker(); // Compare current score against the Top List
 		break;
 
 	case WIN_GAMESTATE:
 		game_status = WIN_GAMESTATE;
-		cleaner();
+		score_data = points;
+		score_checker(); // Compare current score against the Top List
 		break;
 
 	case MENU_GAMESTATE:
@@ -1180,9 +1219,9 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 			gameStatusController(START_GAMESTATE, INTIAL_PAUSED_TIME);
 	}
 
-	/* Game Over GAMESTATE Controls */
+	/* Game Over & Win GAMESTATE Controls */
 	// Save the player's score
-	if (game_sentinel == GAMEOVER_GAMESTATE)
+	if (game_sentinel == GAMEOVER_GAMESTATE || game_sentinel == WIN_GAMESTATE)
 	{
 		if (checker == true)
 		{
@@ -1251,6 +1290,7 @@ void gameInitController()
 	init_sea_screen();
 	init_game_over_screen();
 	init_game_over_screen2();
+	init_win_game_screen();
 	init_top_list_screen();
 	init_instructions_screen();
 	init_credits_screen();
@@ -1318,11 +1358,15 @@ void gameDrawersTopScreenController(int game_sentinel)
 			drawer_game_over_screen2();
 		}
 	}
+	else if (game_sentinel == WIN_GAMESTATE)
+	{
+		drawer_win_game_screen();
+	}
 }
 
 void gameDrawersBottomScreenController(int game_sentinel)
 {
-	if (game_sentinel == START_GAMESTATE || game_sentinel == GAMEOVER_GAMESTATE)
+	if (game_sentinel == START_GAMESTATE || game_sentinel == WIN_GAMESTATE || game_sentinel == LEVEL_UP_GAMESTATE || game_sentinel == GAMEOVER_GAMESTATE)
 	{
 		drawer_scoreboard_screen();
 		drawer_dynamic_score(FONT_SIZE);

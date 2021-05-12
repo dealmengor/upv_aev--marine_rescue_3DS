@@ -1,3 +1,4 @@
 --atlas -f rgba8888 -z auto
 game_over_save_score.png
 game_over.png
+win_game.png

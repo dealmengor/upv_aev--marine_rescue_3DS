@@ -22,6 +22,7 @@
 #define START_POINTS 0
 #define START_LEVEL 1
 #define NEXT_LEVEL 100
+#define WIN_POINTS 1000
 #define RESCUE_POINTS 10
 #define TIME_DIFFERENCE_QUANTITY 3
 #define TIME_BUFFER_SIZE 80
@@ -108,6 +109,18 @@ typedef enum
 
 } lifeboat_sprites;
 
+typedef enum
+{
+    NORTH,     // 0
+    NORTHEAST, // 1
+    EAST,      // 2
+    SOUTHEAST, // 3
+    SOUTH,     // 4
+    SOUTHWEST, // 5
+    WEST,      // 6
+    NORTHWEST  // 7
+} compass;
+
 /* Structures */
 
 // Castaway sprite struct
@@ -188,6 +201,7 @@ void init_game_title_screen();
 void init_sea_screen();
 void init_game_over_screen();
 void init_game_over_screen2();
+void init_win_game_screen();
 void init_top_list_screen();
 void init_instructions_screen();
 void init_credits_screen();
@@ -218,9 +232,10 @@ void bounceCastaway_Coastguardship(Castaway *castaway);
 void bounceSharpedo_Coastguardship(Sharpedo *sharpedo);
 void bounceCoastGuardShip_Lifeboat();
 
-/* Lifeboat Controllers */
+/* Lifeboat Actions */
 void lifeboatpickUp(Lifeboat *lboat, Castaway *castaway);
 void lifeboatDeath(Lifeboat *lboat);
+void lifeboatBoarding();
 
 /* Spawn Controllers */
 void spawnNewCastaway();
@@ -252,6 +267,7 @@ void drawer_game_title_screen();
 void drawer_sea_screen();
 void drawer_game_over_screen();
 void drawer_game_over_screen2();
+void drawer_win_game_screen();
 void drawer_top_list_screen();
 void drawer_top_list(float size);
 void drawer_instructions_screen();
