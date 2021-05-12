@@ -52,6 +52,12 @@ static C2D_SpriteSheet screens2_spriteSheet;
 /* C2D_Text Declaration Variables */
 C2D_TextBuf g_dynamicBuf; // Buffer Declaratation
 
+/* Audio Variables */
+int sound_status = STAND_BY_STATE;
+
+// Wave buffer struct and type
+ndspWaveBuf waveBuf[1];
+
 /* Initializer Functions */
 void init_sprites()
 {
@@ -1382,6 +1388,59 @@ void gameDrawersBottomScreenController(int game_sentinel)
 	}
 }
 
+void gameSoundController(int sound_sentinel)
+{
+
+	if (sound_sentinel == PLAY_STATE)
+	{
+		// Pointer for Linear Allocation
+		u32 *audioBuffer = (u32 *)linearAlloc(SAMPLESPERBUF * BYTESPERSAMPLE * 2);
+
+		// Initializes NDSP.
+		ndspInit();
+
+		// Output mode to set.
+		ndspSetOutputMode(NDSP_OUTPUT_MONO);
+
+		// Sets the interpolation type of a channel.
+		ndspChnSetInterp(0, NDSP_INTERP_LINEAR);
+
+		// Sets the sample rate of a channel. ID of the channel (0..23).
+		ndspChnSetRate(0, SAMPLERATE);
+
+		/*
+		Sets the format of a channel. ID of the channel (0..23). 
+		PCM8. Pulse-code modulation(PCM), bit depth is the number of bits of information in each sample 
+		and it directly corresponds to the resolution of each sample. 8 bits per sample
+		*/
+		ndspChnSetFormat(0, NDSP_FORMAT_PCM8);
+
+		/*
+		Sets the mix parameters (volumes) of a channel.
+		0: Front left volume.
+		1: Front right volume.
+		2: Back left volume:
+		3: Back right volume:
+		4..7: Same as 0..3, but for auxiliary output 0.
+		8..11: Same as 0..3, but for auxiliary output 1.
+		*/
+
+		// Mix Channels
+		float mix[12];
+		memset(mix, 0, sizeof(mix)); // Fill with "0" all mix elements and then use the 0 and 1 channel
+		mix[0] = 1.0;
+		mix[1] = 1.0;
+		ndspChnSetMix(0, mix);
+
+		// Fill with "0" all waveBuf elements and then then use the 0 and 1 channel
+		memset(waveBuf, 0, sizeof(waveBuf));
+		waveBuf[0].data_vaddr = memcpy(&audioBuffer[0], BUFFER_TO_STREAM, sizeof(BUFFER_TO_STREAM)); // Data virtual address
+		waveBuf[0].nsamples = SAMPLESPERBUF;														 // Total number of samples
+		waveBuf[0].looping = true;																	 //Looping Music True
+		ndspChnWaveBufAdd(0, &waveBuf[0]);
+	}
+}
+
 /* Main Function */
 int main(int argc, char *argv[])
 {
@@ -1405,6 +1464,9 @@ int main(int argc, char *argv[])
 
 	// Initialize the scene
 	sceneInit();
+
+	// Initialize audio Buffer
+	gameSoundController(PLAY_STATE);
 
 	// Main loop
 	while (aptMainLoop())
