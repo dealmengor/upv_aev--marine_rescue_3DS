@@ -6,7 +6,6 @@
 int game_status = MENU_GAMESTATE;
 int points = START_POINTS;
 int level = START_LEVEL;
-int lb_speedometer = START_SPEEDOMETER;
 
 /* Time Variables */
 time_t current_epoch_time, initial_second, current_initial_paused_time, last_paused_time, game_time, next_spawn, next_fuel_consumption;
@@ -15,8 +14,8 @@ struct tm ts;						  //Time Structure
 char time_buf[TIME_BUFFER_SIZE];	  //Buffer Convert from epoch to human-readable date
 
 /* Element Counters */
-int castawaycount = 0;
-int sharpedocount = 0;
+int castaway_count_active = 0;
+int sharpedo_count_active = 0;
 int castawaysaved = 0;
 
 /* Structures & Data Structures Declaratation */
@@ -81,7 +80,7 @@ void init_castaways()
 {
 	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
 	{
-		Castaway *castaway = &castaways[castawaycount];
+		Castaway *castaway = &castaways[i];
 		// SPEED, Random image, position & rotation
 		C2D_SpriteFromSheet(&castaway->spr, castaways_spriteSheet, rand() % 2);
 		C2D_SpriteSetCenter(&castaway->spr, 0.5f, 0.5f);
@@ -91,7 +90,6 @@ void init_castaways()
 		castaway->dx = castaway->speed;
 		castaway->dy = castaway->speed;
 		castaway->visible = false;
-		castawaycount += 1;
 	}
 }
 
@@ -99,7 +97,7 @@ void init_sharpedo()
 {
 	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 	{
-		Sharpedo *sprite = &sharpedos[sharpedocount];
+		Sharpedo *sprite = &sharpedos[i];
 		if (i >= MEGA_SHARPEDO_SPAWN_LEVEL - 1)
 		{
 			C2D_SpriteFromSheet(&sprite->spr, sharpedo_spriteSheet, 1);
@@ -118,10 +116,10 @@ void init_sharpedo()
 		C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
 		C2D_SpriteSetPos(&sprite->spr, rand() % TOP_SCREEN_WIDTH, rand() % TOP_SCREEN_HEIGHT);
 		C2D_SpriteSetRotation(&sprite->spr, C3D_Angle(rand() / (float)RAND_MAX));
-		sharpedocount += 1;
 		if (i == 0)
 		{
 			sprite->stalking = false; // One Sharpedo for first level
+			sharpedo_count_active += 1;
 		}
 		else
 		{
@@ -645,6 +643,7 @@ void spawnNewCastaway()
 		if (castaway->visible == false)
 		{
 			castaway->visible = true;
+			castaway_count_active += 1;
 			break;
 		}
 	}
@@ -661,6 +660,7 @@ void spawnNewSharpedo()
 			if (sharpedo->stalking == true)
 			{
 				sharpedo->stalking = false;
+				sharpedo_count_active += 1;
 				break;
 			}
 		}
@@ -669,22 +669,6 @@ void spawnNewSharpedo()
 }
 
 /* Collision Functions */
-// void collisionSharpedo_Sharpedo()
-// {
-// 	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
-// 	{
-// 		Shark *shark = &sharpedos[i];
-// 		Shark *shark2 = &sharpedos[i];
-// 		if (abs(shark->spr.params.pos.x - shark2[i].spr.params.pos.x) < 20.0f &&
-// 			abs(shark->spr.params.pos.y - shark2[i].spr.params.pos.y) < 20.0f)
-// 		// &&shark->id != shark2[i].id
-// 		{
-// 			shark->dx = -shark->dx;
-// 			shark->dy = -shark->dy;
-// 		}
-// 	}
-// }
-
 void collisionSharpedo_Castaway()
 {
 	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
@@ -808,7 +792,7 @@ void drawer_castaways()
 
 void drawer_sharpedos()
 {
-	for (size_t i = 0; i < sharpedocount; i++)
+	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
 	{
 		Sharpedo *sharpedo = &sharpedos[i];
 		if (sharpedo->stalking == false)
@@ -1018,20 +1002,65 @@ void scenesExit()
 
 void cleaner()
 {
-	/* Socoreboard Variables */
-	game_status = MENU_GAMESTATE;
+	/* Reset Socoreboard Variables */
 	points = START_POINTS;
 	level = START_LEVEL;
-	lb_speedometer = START_SPEEDOMETER;
 
 	/* Element Counters */
-	castawaycount = 0;
-	sharpedocount = 0;
 	castawaysaved = 0;
 
 	/*Top List System */
 	score_data = 0;
 	checker = false;
+
+	// Time Variables cleaning
+	current_epoch_time = 0;
+	initial_second = 0;
+	current_initial_paused_time = 0;
+	last_paused_time = 0;
+	game_time = 0;
+	next_spawn = 0;
+	next_fuel_consumption = 0;
+
+	// Arrays & buffers cleaning
+	memset(diff_t, 0, sizeof(diff_t));
+	C2D_TextBufClear(g_dynamicBuf);
+
+	// Lifeboat_selector cleaning
+	void init_boat_selector();
+
+	// Lifeboat cleaning
+	init_lifeboat(BOAT_LIFES, false, BOAT_START_POS_X, BOAT_START_POS_Y);
+
+	// CoastGuard Ship cleaning
+	init_coastguardship();
+
+	// Sharpedos cleaning
+	for (size_t i = 0; i < MAX_SHARPEDOS; i++)
+	{
+		Sharpedo *sprite = &sharpedos[i];
+		if (sprite->stalking == false && sharpedo_count_active > 1)
+		{
+			sprite->stalking = true; // One Sharpedo for first level
+			sharpedo_count_active -= 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// Castaways cleaning
+	for (size_t i = 0; i < MAX_CASTAWAYS; i++)
+	{
+		Castaway *castaway = &castaways[i];
+		if (castaway->visible == true)
+		{
+			castaway->visible = false;
+			castaway_count_active -= 1;
+			break;
+		}
+	}
 }
 
 /* Game Controllers */
@@ -1046,10 +1075,6 @@ void gameStatusController(int game_sentinel, int time_sentinel)
 	case START_GAMESTATE:
 		game_status = START_GAMESTATE;
 		gameTimeController(time_sentinel, game_status); // Start Stopwatch
-		break;
-
-	case NEW_GAMESTATE:
-		game_status = NEW_GAMESTATE;
 		break;
 
 	case PAUSED_GAMESTATE:
@@ -1069,10 +1094,12 @@ void gameStatusController(int game_sentinel, int time_sentinel)
 
 	case WIN_GAMESTATE:
 		game_status = WIN_GAMESTATE;
+		cleaner();
 		break;
 
 	case MENU_GAMESTATE:
 		game_status = MENU_GAMESTATE;
+		cleaner();
 		break;
 
 	case TOP_LIST_GAMESTATE:
@@ -1154,7 +1181,6 @@ void gameInputController(int game_sentinel, u32 kDown, u32 kHeld)
 	}
 
 	/* Game Over GAMESTATE Controls */
-
 	// Save the player's score
 	if (game_sentinel == GAMEOVER_GAMESTATE)
 	{

@@ -20,7 +20,6 @@
 
 // Game Configuratation Variables
 #define START_POINTS 0
-#define START_SPEEDOMETER 0
 #define START_LEVEL 1
 #define NEXT_LEVEL 100
 #define RESCUE_POINTS 10
@@ -78,15 +77,14 @@ typedef enum
 {
     EXIT_GAMESTATE,         // 0
     START_GAMESTATE,        // 1
-    NEW_GAMESTATE,          // 2
-    PAUSED_GAMESTATE,       // 3
-    LEVEL_UP_GAMESTATE,     // 4
-    GAMEOVER_GAMESTATE,     // 5
-    WIN_GAMESTATE,          // 6
-    MENU_GAMESTATE,         // 7
-    TOP_LIST_GAMESTATE,     // 8
-    INSTRUCTIONS_GAMESTATE, // 9
-    CREDITS_GAMESTATE       //10
+    PAUSED_GAMESTATE,       // 2
+    LEVEL_UP_GAMESTATE,     // 3
+    GAMEOVER_GAMESTATE,     // 4
+    WIN_GAMESTATE,          // 5
+    MENU_GAMESTATE,         // 6
+    TOP_LIST_GAMESTATE,     // 7
+    INSTRUCTIONS_GAMESTATE, // 8
+    CREDITS_GAMESTATE       // 9
 } game_state;
 
 typedef enum
