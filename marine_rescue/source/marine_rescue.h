@@ -227,7 +227,6 @@ void spawnNewCastaway();
 void spawnNewSharpedo();
 
 /* Collision Functions */
-//void collisionSharpedo_Sharpedo();
 void collisionsharpedo_Castaway();
 void collisionsharpedo_Lifeboat();
 void collisionCastaway_Lifeboat();

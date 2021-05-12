@@ -1271,7 +1271,6 @@ void gameMoveSpritesController()
 
 void gameCollisionsController()
 {
-	// collisionSharpedo_Sharpedo();
 	collisionSharpedo_Castaway();
 	collisionSharpedo_Lifeboat();
 	collisionSharpedo_Coastguardship();
